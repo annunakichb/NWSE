@@ -180,6 +180,7 @@ namespace NWSELib.net
         #endregion
 
         #region 初始化
+        private double eplison = 1.0;
         /// <summary>
         /// 重置计算
         /// </summary>
@@ -190,6 +191,7 @@ namespace NWSELib.net
             this.Inferences.ForEach(inf =>
                 inf.Records.ForEach(r => r.CachedCondNodes = null)
             ) ;
+            eplison = 1.0;
         }
         public void thinkReset()
         {
@@ -298,8 +300,7 @@ namespace NWSELib.net
         {
             get 
             {
-                List<double> r = this.Inferences.FindAll(inf => !double.IsNaN(inf.Reability))
-                    .ConvertAll(inf => inf.Reability);
+                List<double> r = this.Inferences.ConvertAll(inf=>inf.Reability).FindAll(reability => !double.IsNaN(reability));
                 if (r == null || r.Count <= 0) return double.NaN;
                 return r.Average();
             }
@@ -379,7 +380,7 @@ namespace NWSELib.net
             for (int i = 0; i < this.Inferences.Count; i++)
             {
                 Inference inf = this.Inferences[i];
-                inf.Records.ForEach(r => r.adjustAccuracy(this, inf, time));
+                inf.Records.ForEach(r => r.adjustAccuracy(time));
                 
             }
             //4. 记忆整理
@@ -402,8 +403,17 @@ namespace NWSELib.net
             this.setReward(reward,time,1);
 
             //8. 推理想象、行为决策
-            ActionPlan plan = imagination.doImagination(time, session);
-            if (plan == null) plan = createDefaultPlan(time);
+            ActionPlan plan = null;
+            eplison = time == 0 ? 1.0 : 1 / Math.Sqrt(time);
+            if (rng.NextDouble() <= eplison)
+            {
+                plan = createDefaultPlan(time);
+            }
+            else 
+            {
+                plan = imagination.doImagination(time, session);
+                if (plan == null) plan = createDefaultPlan(time);
+            }
             this.actionPlanTraces.Add(plan);
             setEffectValue(time);
 
@@ -530,7 +540,7 @@ namespace NWSELib.net
         {
             if (abstractLevel == 0) return value;
 
-            int sectionCount = r.getGene().getAbstractSectionCount(abstractLevel);
+            int sectionCount = r.getGene().AbstractSectionCount;
             if (sectionCount <= 0) return value;
 
             return MeasureTools.GetMeasure(r.Cataory).getRankedValue(value, abstractLevel, sectionCount);
@@ -723,7 +733,7 @@ namespace NWSELib.net
                 
                 if (mode == REWARD_ONCE) break;
             }
-            if (reward == -50.0) actionPlanTraces.Clear();
+            if (reward == Session.GetConfiguration().evaluation.reward.collision) actionPlanTraces.Clear();
         }
         #endregion
 

@@ -45,8 +45,6 @@ namespace NWSEExperiment
             this.Width = Session.GetConfiguration().view.width;
             this.Height = Session.GetConfiguration().view.height;
 
-            
-            
         }
 
         private void btnshowTrail_Click(object sender, EventArgs e)
@@ -110,6 +108,12 @@ namespace NWSEExperiment
             }
         }
 
+        private void btnEReset_Click(object sender, EventArgs e)
+        {
+            if (evolutionSession == null) return;
+            evolutionSession.stop();
+        }
+
         public void EventHandler(String eventName, int generation, params Object[] states)
         {
             this.Invoke(new BeginInvokeDelegate(eventHandler), eventName, generation, states);
@@ -123,8 +127,10 @@ namespace NWSEExperiment
                 txtTime.Text = "0";
 
                 demoNet = ((Network)states[0]);
+                refreshNetwork(demoNet, treeviewCurNet);
                 demoAgent = (RobotAgent)this.evolutionMaze.GetAgent(demoNet.Id);
                 if (demoAgent != null) demoAgent.Visible = cbVisible.Checked;
+
                 this.Refresh();
             }
             else if (eventName == Session.EVT_LOG)
@@ -150,6 +156,16 @@ namespace NWSEExperiment
 
                 if(cbVisible.Checked)
                     this.Refresh();
+
+                if(optima_net == null || network.Fitness>optima_net.Fitness)
+                {
+                    this.optima_generation = generation;
+                    this.optima_net = (Network)states[0];
+                    txtMaxFitness.Text = network.Fitness.ToString("F6");
+                    txtOptimaNetId.Text = network.ToString();
+
+                    
+                }
                 
             }
             else if (eventName == Session.EVT_EVAULATION_END)
@@ -175,9 +191,10 @@ namespace NWSEExperiment
                 txtMaxFitness.Text = ((double)states[2]).ToString("F6");
                 txtOptimaNetId.Text = optima_net.ToString();
 
-                refreshNetwork(optima_net, treeViewOptimaNet);
+                refreshNetwork(optima_net, treeviewCurNet);
 
                 refreshEvolutionTree();
+                refreshTaskCompletedMenu();
 
                 showLog(generation, txtOptimaNetId.Text);
 
@@ -357,12 +374,15 @@ namespace NWSEExperiment
         {
             if(demoNet == null)
             {
-                demoNet = new Network(genomeFactory.createDemoGenome(evolutionSession)); 
+                //demoNet = new Network(genomeFactory.createDemoGenome(evolutionSession)); 
+                //demoNet = new Network(genomeFactory.createAccuracyTestGenome(evolutionSession));
+                demoNet = new Network(genomeFactory.createAccuracyHighLimitTestGenome(evolutionSession));
             }
             interactiveMode = true;
             interactive_time = 0;
-            (obs, gesture) = evolutionMaze.reset(optima_net);
+            (obs, gesture) = evolutionMaze.reset(demoNet);
             demoAgent = evolutionMaze.Agents[0];
+            demoAgent.Visible = true;
 
             (int ptx, int pty) = MeasureTools.Position.poscodeSplit(obs[11]);
             this.txtMsg.Text = "第" + interactive_time.ToString() + "次交互" + System.Environment.NewLine;
@@ -388,9 +408,9 @@ namespace NWSEExperiment
             //网络执行
             List<double> inputs = new List<double>(obs);
             inputs.AddRange(gesture);
-            actions = this.optima_net.activate(inputs, interactive_time,evolutionSession,reward);
+            actions = this.demoNet.activate(inputs, interactive_time,evolutionSession,reward);
             //显示推理链
-            this.txtMsg.Text += this.optima_net.showActionPlan();
+            this.txtMsg.Text += this.demoNet.showActionPlan();
 
             interactive_time += 1;
             inferencing = true;
@@ -406,8 +426,8 @@ namespace NWSEExperiment
         /// <param name="e"></param>
         private void toolStripButton7_Click(object sender, EventArgs e)
         {
-            (obs,gesture,actions,reward,end) = ((IEnv)this.evolutionMaze).action(this.optima_net,
-                this.optima_net.Effectors.ConvertAll(x => x.Value[0]));
+            (obs,gesture,actions,reward,end) = ((IEnv)this.evolutionMaze).action(this.demoNet,
+                this.demoNet.Effectors.ConvertAll(x => x.Value[0]));
             (int ptx, int pty) = MeasureTools.Position.poscodeSplit(obs[11]);
 
             this.txtMsg.Text += "第" + interactive_time.ToString() + "次交互" + System.Environment.NewLine;
@@ -416,7 +436,7 @@ namespace NWSEExperiment
             this.txtMsg.Text += "位置=" + obs[11].ToString("F4")+"("+ ptx.ToString()+","+pty.ToString()+")"+System.Environment.NewLine;
             this.txtMsg.Text += "朝向=" + MeasureTools.Direction.headingToDegree(gesture[0]).ToString("F2") + "(" + gesture[0].ToString("F2") + ")" + System.Environment.NewLine;
             this.txtMsg.Text += "奖励=" + this.reward+ System.Environment.NewLine;
-            this.txtMsg.Text += "碰撞=" + this.optimaAgent.PrevCollided.ToString() + "->" + optimaAgent.HasCollided.ToString();
+            this.txtMsg.Text += "碰撞=" + this.demoAgent.PrevCollided.ToString() + "->" + demoAgent.HasCollided.ToString();
             this.txtMsg.Text += System.Environment.NewLine;
 
             //this.optima_net.setReward(reward, interactive_time);
@@ -459,6 +479,7 @@ namespace NWSEExperiment
         public void clearOptimaMenu()
         {
             btnOpenOptima.DropDownItems.Clear();
+            btnTaskCompletedInds.DropDownItems.Clear();
         }
         private void insertOptimaMenu(Network net)
         {
@@ -468,6 +489,29 @@ namespace NWSEExperiment
             menuItem = (ToolStripMenuItem)btnOpenOptima.DropDownItems.Add(net.ToString());
             menuItem.Tag = net;
             menuItem.Click += btnOpenOptima_Click;
+        }
+        public void refreshTaskCompletedMenu()
+        {
+            if (evolutionSession == null) return;
+            this.btnTaskCompletedInds.DropDownItems.Clear();
+            if (evolutionSession.taskCompletedNets == null || evolutionSession.taskCompletedNets.Count <= 0) return;
+            foreach(Network net in evolutionSession.taskCompletedNets)
+            {
+                ToolStripItem item = btnTaskCompletedInds.DropDownItems.Add(net.ToString());
+                item.Tag = net;
+                item.Click += TaskCompletedNet_Click;
+
+            }
+
+        }
+        
+
+        private void TaskCompletedNet_Click(object sender, EventArgs e)
+        {
+            ToolStripItem menuItem = (ToolStripItem)sender;
+            if (menuItem.Tag == null) return;
+            demoNet = (Network)menuItem.Tag;
+            this.initInteraction();
         }
 
         private ToolStripMenuItem matchOptimaMenu(int netid)
@@ -513,7 +557,7 @@ namespace NWSEExperiment
             this.txtMsg.Text += System.Environment.NewLine;
             this.txtMsg.Text += "#####个体结构(Level1)#####";
             //打印推理记忆节点现状
-            List<Inference> infs = this.optima_net.Inferences;
+            List<Inference> infs = this.demoNet.Inferences;
             for (int i = 0; i < infs.Count; i++)
             {
                 Inference inf = (Inference)infs[i];
@@ -528,7 +572,7 @@ namespace NWSEExperiment
             this.txtMsg.Text += System.Environment.NewLine;
             this.txtMsg.Text += "#####个体结构(Level2)#####";
             //打印推理记忆节点现状
-            List<Inference> infs = this.optima_net.imagination.inferences;
+            List<Inference> infs = this.demoNet.imagination.inferences;
             for (int i = 0; i < infs.Count; i++)
             {
                 Inference inf = (Inference)infs[i];
@@ -545,6 +589,7 @@ namespace NWSEExperiment
             this.Refresh();
 
         }
+
 
 
 

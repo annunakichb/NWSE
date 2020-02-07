@@ -210,5 +210,49 @@ namespace NWSELib.genome
             genome.computeNodeDepth();
             return genome;
         }
+
+        public NWSEGenome createAccuracyLowLimitTestGenome(Session session)
+        {
+            NWSEGenome genome = new NWSEGenome();
+            //生成感受器
+            this.createReceptors(genome, session);
+
+            InferenceGene inferenceGene = null;
+            inferenceGene = new InferenceGene(genome);
+            inferenceGene.Generation = session.Generation;
+            inferenceGene.conditions = new List<(int, int)>();
+            inferenceGene.variables = new List<(int, int)>();
+            inferenceGene.conditions.Add((genome["heading"].Id, 1));
+            inferenceGene.variables.Add((genome["pos"].Id, 0));
+            inferenceGene.sort_dimension();
+            inferenceGene.Id = Session.idGenerator.getGeneId(inferenceGene);
+            genome.infrernceGenes.Add(inferenceGene);
+
+            genome.id = Session.idGenerator.getGenomeId();
+            genome.computeNodeDepth();
+            return genome;
+        }
+        public NWSEGenome createAccuracyHighLimitTestGenome(Session session)
+        {
+            NWSEGenome genome = new NWSEGenome();
+            //生成感受器
+            this.createReceptors(genome, session);
+
+            InferenceGene inferenceGene = null;
+            inferenceGene = new InferenceGene(genome);
+            inferenceGene.Generation = session.Generation;
+            inferenceGene.conditions = new List<(int, int)>();
+            inferenceGene.variables = new List<(int, int)>();
+            inferenceGene.conditions.Add((genome["heading"].Id, 1));
+            inferenceGene.conditions.Add((genome["_a2"].Id, 1));
+            inferenceGene.variables.Add((genome["heading"].Id, 0));
+            inferenceGene.sort_dimension();
+            inferenceGene.Id = Session.idGenerator.getGeneId(inferenceGene);
+            genome.infrernceGenes.Add(inferenceGene);
+
+            genome.id = Session.idGenerator.getGenomeId();
+            genome.computeNodeDepth();
+            return genome;
+        }
     }
 }

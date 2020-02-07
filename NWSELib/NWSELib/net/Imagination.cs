@@ -70,7 +70,7 @@ namespace NWSELib.net
                 //处理准确度等数据
                 for(int i=0;i< absIntegration.Records.Count;i++)
                 {
-                    absIntegration.Records[i].accuracyDistance = accuracies[i].Average();
+                    absIntegration.Records[i].accuracy = accuracies[i].Average();
                     absIntegration.Records[i].evulation = evaulations[i].Average();
                     absIntegration.Records[i].usedCount = usedCounts[i].Sum();
                 }
@@ -93,7 +93,7 @@ namespace NWSELib.net
                 if (!Vector.equals(newRecord.means,newValue))
                     continue;
                 newRecord.acceptCount += orginRecord.acceptCount;
-                accuracies[i].Add(orginRecord.accuracyDistance);
+                accuracies[i].Add(orginRecord.accuracy);
                 evaulations[i].Add(orginRecord.evulation);
                 usedCounts[i].Add(orginRecord.usedCount);
                 newRecord.childs.Add(orginRecord);
@@ -106,7 +106,7 @@ namespace NWSELib.net
             usedCounts.Add(new List<int>());
 
             newRecord.acceptCount += orginRecord.acceptCount;
-            accuracies[accuracies.Count-1].Add(orginRecord.accuracyDistance);
+            accuracies[accuracies.Count-1].Add(orginRecord.accuracy);
             evaulations[evaulations.Count-1].Add(orginRecord.evulation);
             usedCounts[usedCounts.Count-1].Add(orginRecord.usedCount);
             newRecord.covariance = orginRecord.covariance;
@@ -204,7 +204,7 @@ namespace NWSELib.net
                     }
                     nRecord.means.AddRange(largeVarValues);
                     nRecord.acceptCount = Math.Max(matchRecords[j].acceptCount, inf2.Records[i].acceptCount);
-                    nRecord.accuracyDistance = Math.Max(matchRecords[j].accuracyDistance, inf2.Records[i].accuracyDistance);
+                    nRecord.accuracy = Math.Max(matchRecords[j].accuracy, inf2.Records[i].accuracy);
                     nRecord.evulation = 0;// Math.Min(matchRecords[j].evulation, inf2.Records[i].evulation);
                     nRecord.usedCount = Math.Max(matchRecords[j].usedCount, inf2.Records[i].usedCount);
                     nRecord.covariance = nRecord.createDefaultCoVariance();
@@ -496,7 +496,7 @@ namespace NWSELib.net
                 //准备生成新的观察
                 Dictionary<Receptor, Vector> newObservations = new Dictionary<Receptor, Vector>();
                 Dictionary<Receptor, double> newObservationDistances = new Dictionary<Receptor, double>();
-                double eva = 0.0,totaldis = 0.0;
+                double eva = 0.0;
                 //对每一个整合项进行前向推理,得到每个推理的评估
                 foreach (Inference inte in infs)
                 {

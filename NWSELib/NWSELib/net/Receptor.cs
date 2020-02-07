@@ -12,7 +12,7 @@ namespace NWSELib.net
     public class Receptor : Node
     {
 
-        
+        #region 初始化
         public Receptor(NodeGene gene,Network net) : base(gene,net)
         {
 
@@ -22,7 +22,9 @@ namespace NWSELib.net
         {
             return (ReceptorGene)gene;
         }
+        #endregion
 
+        #region 值管理
         /// <summary>
         /// 设置当前值
         /// </summary>
@@ -31,12 +33,24 @@ namespace NWSELib.net
         /// <returns></returns>
         public override Object activate(Network net, int time, Object value = null)
         {
-            //Object prevValue = base.activate(net, time, new Vector(sectionIndex));
+            value = getRankedValue((double)value);
             Object prevValue = base.activate(net, time, value);
             return prevValue;
         }
 
-        
+        public double getRankedValue(double originValue)
+        {
+            if (this.getGene().AbstractLevel == 0)
+                return originValue;
+
+
+            int sectionCount = getGene().AbstractSectionCount;
+            if (sectionCount <= 0) return originValue;
+
+            return MeasureTools.GetMeasure(this.Cataory).getRankedValue(originValue, this.getGene().AbstractLevel, sectionCount);
+
+
+        }
 
         public override Vector Value
         {
@@ -100,5 +114,20 @@ namespace NWSELib.net
             if (tindex < 0) return null;
             return new Vector(MeasureTools.GetMeasure(this.Cataory).getRankedValue(this.values[tindex], this.getGene().AbstractLevel, this.getGene().AbstractSectionCount));
         }
+        #endregion
+
+        #region 值距离
+        public double distance(double v,int time=-1)
+        {
+            double v2 = (time < 0 ? this.Value[0] : this.GetValue(time)[0]);
+            return distance(v,v2);
+        }
+        public double distance(double v1,double v2)
+        {
+            MeasureTools measure =
+                MeasureTools.GetMeasure(Gene.Cataory);
+            return measure.distance(v1, v2);
+        }
+        #endregion
     }
 }

@@ -82,7 +82,12 @@ namespace NWSELib.net
             get => this.gene.Dimension;
         }
 
+        
         #endregion
+
+        
+
+        
 
         #region 状态信息
         /// <summary>
@@ -155,10 +160,18 @@ namespace NWSELib.net
             return this.values[tindex];
         }
 
+        #endregion
+
+        #region 缓存和初始化
+
+        public readonly List<Receptor> receptors;
+
+        
         public Node(NodeGene gene,Network net)
         {
             this.gene = gene;
             this.net = net;
+            receptors = this.gene.getLeafGenes().ConvertAll(g => (Receptor)net[g.Id]);
         }
         #endregion
 

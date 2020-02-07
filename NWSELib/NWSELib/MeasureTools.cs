@@ -45,10 +45,12 @@ namespace NWSELib
             if (abstractLevel == 0) return originValue;
             
             double unit = this.Range.Distance / sectionCount;
-            int levelIndex = (int)((originValue - Range.Min) / unit);
-            if (levelIndex >= sectionCount)
-                levelIndex = sectionCount - 1;
-            double newValue = Range.Min + (levelIndex * unit + (levelIndex + 1) * unit) / 2.0;
+            double t = originValue / unit;
+            int index = (int)t;
+            double newValue = Range.Min + index * unit;
+            if(t - index >= 0.5)
+                newValue = Range.Min + (index+1) * unit;
+            
             return newValue;
         }
         /// <summary>

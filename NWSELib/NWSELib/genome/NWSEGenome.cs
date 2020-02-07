@@ -57,7 +57,8 @@ namespace NWSELib.genome
         /// </summary>
         public NWSEGenome()
         {
-          
+            this.handlerSelectionProb.Clear();
+            this.handlerSelectionProb.AddRange(Session.GetConfiguration().evolution.mutate.Handlerprob);
         }
         #endregion
 
@@ -116,6 +117,7 @@ namespace NWSELib.genome
                     genome.infrernceGenes.Add(InferenceGene.parse(s));
                 else if (s.StartsWith("handlerSelectionProb"))
                 {
+                    genome.handlerSelectionProb.Clear();
                     genome.handlerSelectionProb.AddRange(Utility.parse<double>(s));
                 }
                 else if (s.StartsWith("invaild"))
@@ -143,6 +145,7 @@ namespace NWSELib.genome
         {
             NWSEGenome genome = new NWSEGenome();
             receptorGenes.ForEach(r => genome.receptorGenes.Add(r.clone<ReceptorGene>()));
+            genome.handlerSelectionProb.Clear();
             genome.handlerSelectionProb.AddRange(handlerSelectionProb);
             handlerGenes.ForEach(h => genome.handlerGenes.Add(h.clone<HandlerGene>()));
             infrernceGenes.ForEach(i => genome.infrernceGenes.Add(i.clone<InferenceGene>()));

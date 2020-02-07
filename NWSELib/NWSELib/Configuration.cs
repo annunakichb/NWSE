@@ -210,6 +210,8 @@ namespace NWSELib
             [XmlArray]
             [XmlArrayItem(Type = typeof(SensorProperty))]
             public List<SensorProperty> properties = new List<SensorProperty>();
+            [XmlAttribute]
+            public int abstractLevel;
 
             #region 数据范围分级信息
             [XmlIgnore]
@@ -283,11 +285,7 @@ namespace NWSELib
 
         public class Learning
         {
-            [XmlAttribute]
-            public double eplison;
-            [XmlAttribute]
-            public double tolerable_similarity;
-
+            
             [XmlElement]
             public LearningInfernece inference = new LearningInfernece();
             [XmlElement]
@@ -331,12 +329,26 @@ namespace NWSELib
             public int run_count;
             [XmlAttribute]
             public double end_distance;
-           
+
+            [XmlElement]
+            public EvaluationReward reward = new EvaluationReward();
+
+        }
+
+        public class EvaluationReward
+        {
+            [XmlAttribute]
+            public double collision = -50;
+            [XmlAttribute]
+            public double normal = 0.1;
+            [XmlAttribute]
+            public double away =1.0;
         }
         public class Evolution
         {
             [XmlAttribute]
             public int propagate_base_count;
+
             [XmlAttribute]
             public int iter_count;
 
@@ -350,7 +362,9 @@ namespace NWSELib
         public class EvolutionSelection
         {
             [XmlAttribute]
-            public int count;
+            public int min_population_capacity;
+            [XmlAttribute]
+            public int max_population_capacity;
             [XmlAttribute]
             public double reability_lowlimit;
         }
@@ -359,12 +373,14 @@ namespace NWSELib
         {
             [XmlAttribute]
             public String handlerprob;
-            [XmlIgnore]
-            private List<double> _handlerprob;
+           
             [XmlIgnore]
             public List<double> Handlerprob 
             {
-                get => _handlerprob == null ? _handlerprob = Utility.parse(handlerprob) : _handlerprob;
+                get
+                {
+                    return Utility.parse<double>(handlerprob);
+                }
             }
         }
 

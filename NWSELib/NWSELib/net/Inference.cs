@@ -51,20 +51,26 @@ namespace NWSELib.net
             get
             {
                 if(this.records.Count<=0)return double.NaN;
-                List<double> ds = this.records.FindAll(r => !double.IsNaN(r.accuracyDistance)).ConvertAll(r => r.accuracyDistance);
+                List<double> ds = this.records.FindAll(r => !double.IsNaN(r.accuracy)).ConvertAll(r => r.accuracy);
                 if (ds == null || ds.Count <= 0) return double.NaN;
-                double dis = ds.Average();
-                return Math.Exp(-1*dis);
+                return ds.Average();
             }
         }
         #endregion
 
         #region 初始化
+        public readonly List<Receptor> conditionReceptors;
+        public readonly List<Receptor> variablesReceptors;
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="gene"></param>
-        public Inference(NodeGene gene,Network net) : base(gene,net) { }
+        public Inference(NodeGene gene,Network net) : base(gene,net) 
+        {
+            this.getGene().sort_dimension();
+            conditionReceptors = this.getGene().getConditionIds().ConvertAll(id => (Receptor)net[id]);
+            variablesReceptors = this.getGene().getVariableIds().ConvertAll(id => (Receptor)net[id]);
+        }
         
         public override string ToString()
         {
@@ -268,7 +274,7 @@ namespace NWSELib.net
             foreach (InferenceRecord r in this.records)
             {
                 double dis = 0.0;
-                if(r.isConditionValueMatch(net, this, values, out dis))
+                if(r.isConditionValueMatch(values, out dis))
                 {
                     result.Add((r,dis));
                 }
@@ -286,7 +292,7 @@ namespace NWSELib.net
             foreach(InferenceRecord record in this.records)
             {
                 double distance = 0.0;
-                if (record.isConditionValueMatch(net, this, values, out distance))
+                if (record.isConditionValueMatch(values, out distance))
                 {
                     result.Add((record,distance));
                 }
@@ -364,12 +370,12 @@ namespace NWSELib.net
             if (!varNodes.All(n => n.Item1.IsActivate(time - n.Item2)))
                 return null;
 
-            List<Node> inputs = net.getInputNodes(this.Id);
-
             Vector activeValue = null;
             //确保推理基因的各维度的顺序正确（前置条件在前，后置变量在后，且前置条件id按从小到大排列）
             //Make sure that the dimensions of the inference gene are in the correct order
             ((InferenceGene)this.Gene).sort_dimension();
+
+            List<Node> inputs = net.getInputNodes(this.Id);
 
             //根据基因定义的顺序，将输入值组成List<Vector>
             //Put the input values into the List according to the order of the input dimensions
@@ -712,7 +718,7 @@ namespace NWSELib.net
             foreach (InferenceRecord r in this.records)
             {
                 double d = 0;
-                bool match = r.isConditionValueMatch(net, this, condvalues, out d);
+                bool match = r.isConditionValueMatch(condvalues, out d);
                 if(d < distance)
                 {
                     record = r;
@@ -732,7 +738,7 @@ namespace NWSELib.net
             foreach(InferenceRecord r in this.records)
             {
                 double d = 0;
-                if (!r.isConditionValueMatch(net, this, condvalues, out d))
+                if (!r.isConditionValueMatch(condvalues, out d))
                     continue;
                 //if(r.evulation < evaulation) //找相近里面评估最差的？
                 if (d < distance) //找距离最近的

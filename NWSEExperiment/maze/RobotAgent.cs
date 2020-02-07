@@ -298,7 +298,6 @@ namespace NWSEExperiment.maze
 
         int RangefinderRange = 100;
         int PiesliceRange = 2000;
-        double AngularVelocity = 0;
 
         #endregion
 

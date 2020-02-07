@@ -97,7 +97,7 @@ namespace NWSELib.common
         {
             Vector v = this;
             if (v == null || v.Size <= 0) return "";
-            return v.ToList().ConvertAll(x => x.ToString("F3"))
+            return v.ToList().ConvertAll(x => x.ToString("F4"))
                 .Aggregate((a, b) => a + "," + b);
         }
         #endregion
@@ -218,7 +218,6 @@ namespace NWSELib.common
             int dim = avg.Count;
             int n = cv[0].Size;
             Vector r = new Vector(true, dim * (dim + 1) / 2);
-            int index = 0;
             double[,] result = new double[size, size];
             for (int i = 0; i < size; i++)
             {

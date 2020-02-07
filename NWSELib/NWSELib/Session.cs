@@ -122,6 +122,10 @@ namespace NWSELib
         /// </summary>
         public List<Network> inds = new List<Network>();
         /// <summary>
+        /// 可以完成任务的个体集
+        /// </summary>
+        public List<Network> taskCompletedNets = new List<Network>();
+        /// <summary> 
         /// 事件处理
         /// </summary>
         private EventHandler handler;
@@ -203,6 +207,19 @@ namespace NWSELib
             thread = new Thread(new ThreadStart(do_run));
             thread.Start();
         }
+
+        public void stop()
+        {
+            if (thread == null) return;
+            try
+            {
+                thread.Abort();
+            }
+            finally
+            {
+                thread = null;
+            }
+        }
         public void do_run()
         {
             //初始化
@@ -273,6 +290,17 @@ namespace NWSELib
 
                 maxFitnessNet.save(this.currentSessionPath,this.generation);
 
+                //如果有个体完成了任务，则从种群中移除
+                for(int i=0;i<inds.Count;i++)
+                {
+                    if(inds[i].Fitness >= 14)
+                    {
+                        inds[i].save(this.currentSessionPath, this.generation);
+                        this.taskCompletedNets.Add(inds[i]);
+                        inds.RemoveAt(i--);
+                    }
+                }
+
                 //是否达到最大迭代次数
                 this.generation += 1;
                 if (this.generation >= Session.GetConfiguration().evolution.iter_count)
@@ -294,6 +322,8 @@ namespace NWSELib
             }
 
         }
+
+        
         /// <summary>
         /// 判断是否暂停
         /// </summary>

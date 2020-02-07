@@ -46,7 +46,6 @@ E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\config.xml
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\QDMaze.xml
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\NWSEExperiment.exe.config
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\NWSEExperiment.exe
-E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\NWSEExperiment.pdb
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\log4net.dll
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\NWSELib.dll
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\NWSELib.pdb
@@ -59,3 +58,7 @@ E:\gitlib\annunakichb\NWSE\NWSEExperiment\obj\Debug\NWSEExperiment.csproj.Genera
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\obj\Debug\NWSEExperiment.csproj.CopyComplete
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\obj\Debug\NWSEExperiment.exe
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\obj\Debug\NWSEExperiment.pdb
+E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\NWSEExperiment.pdb
+E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.dll
+E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.pdb
+E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.xml

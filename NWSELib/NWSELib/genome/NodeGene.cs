@@ -248,7 +248,7 @@ namespace NWSELib.genome
         /// <returns></returns>
         public override string ToString()
         {
-            return this.GetType().Name + ": id=" + this.id.ToString() + ",name=" + this.name +
+            return "id=" + this.id.ToString() + ",name=" + this.name +
                 ",generation=" + this.generation + ",cataory=" + this.cataory + ",group=" + this.group;
         }
         public static NodeGene parseGene(String s)
