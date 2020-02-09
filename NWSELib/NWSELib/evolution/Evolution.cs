@@ -41,7 +41,7 @@ namespace NWSELib.evolution
             session.triggerEvent(Session.EVT_LOG, "count of invaild inf=" + invaildCount.ToString()+",count of vaild inf="+ vaildCount.ToString());
 
             //2.计算每个个体所有节点平均可靠度
-            List<double> reability = inds.ConvertAll(ind => ind.AverageReability);
+            List<double> reability = inds.ConvertAll(ind => ind.Reability);
             session.triggerEvent(Session.EVT_LOG, "reability=" + Utility.toString(reability));
 
             
@@ -54,6 +54,11 @@ namespace NWSELib.evolution
                 List<int> indexes = reability.argsort();
                 double reability_lowlimit = reability[indexes[q]];
                 List<Network> reversedinds = new List<Network>();
+                for (int k = 0; k < q;k++)
+                {
+                    EvolutionTreeNode.search(session.root, inds[indexes[k]])
+                        .extinct = true;
+                }
                 for(int k=q;k<indexes.Count;k++)
                 {
                     reversedinds.Add(inds[indexes[k]]);

@@ -19,6 +19,10 @@ namespace NWSELib.evolution
         /// </summary>
         public bool extinct = false;
         /// <summary>
+        /// 深度
+        /// </summary>
+        public readonly int depth = 0;
+        /// <summary>
         /// 子节点
         /// </summary>
         public readonly List<EvolutionTreeNode> childs = new List<EvolutionTreeNode>();
@@ -41,6 +45,7 @@ namespace NWSELib.evolution
         {
             this.network = network;
             this.parent = parent;
+            this.depth = parent == null ? 0 : parent.depth + 1;
             if (childs != null) this.childs.AddRange(childs);
         }
         /// <summary>
@@ -86,17 +91,37 @@ namespace NWSELib.evolution
         }
         public int getDepth()
         {
-            return getDepth(this, 0);
+            return getDepth(this);
         }
-        public static int getDepth(EvolutionTreeNode node,int depth)
+        public static int getDepth(EvolutionTreeNode node)
         {
-            if (node == null) return depth;
-            if (node.childs == null || node.childs.Count <= 0) return depth+1;
+            if (node == null) return 0;
+            if (node.childs == null || node.childs.Count <= 0)
+                return node.depth;
+            int d = node.depth;
             foreach(EvolutionTreeNode n in node.childs)
             {
-                depth = getDepth(n,depth);
+                int t = getDepth(n);
+                if (t > d) d = t;
             }
-            return depth;
+            return d;
+        }
+        public List<EvolutionTreeNode> getAliveNodes()
+        {
+            return getAliveNodes(this, null);
+        }
+        private static List<EvolutionTreeNode> getAliveNodes(EvolutionTreeNode node, List<EvolutionTreeNode> r)
+        {
+            if (r == null) r = new List<EvolutionTreeNode>();
+            if (node == null) return r;
+            if (node.extinct) return r;
+            r.Add(node);
+            if (node.childs == null || node.childs.Count <= 0) return r;
+            foreach(EvolutionTreeNode child in node.childs)
+            {
+                r = getAliveNodes(child, r);
+            }
+            return r;
         }
 
     }

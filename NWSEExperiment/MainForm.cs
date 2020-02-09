@@ -184,7 +184,7 @@ namespace NWSEExperiment
                 ToolStripItem tItem = this.btnOpenOptima.DropDownItems.Add("Generation:" + evolutionSession.Generation.ToString() + ",ind=" + optima_net.Id.ToString());
                 tItem.Tag = optima_net;
 
-                txtDepth.Text = evolutionSession.root.getDepth().ToString();
+                txtDepth.Text = evolutionSession.root.depth.ToString();
                 txtGeneration.Text = evolutionSession.Generation.ToString();
                 txtIndCount.Text = evolutionSession.inds.Count.ToString();
                
@@ -375,7 +375,7 @@ namespace NWSEExperiment
             if(demoNet == null)
             {
                 //demoNet = new Network(genomeFactory.createDemoGenome(evolutionSession)); 
-                //demoNet = new Network(genomeFactory.createAccuracyTestGenome(evolutionSession));
+                //demoNet = new Network(genomeFactory.createAccuracyLowLimitTestGenome(evolutionSession));
                 demoNet = new Network(genomeFactory.createAccuracyHighLimitTestGenome(evolutionSession));
             }
             interactiveMode = true;
@@ -500,7 +500,6 @@ namespace NWSEExperiment
                 ToolStripItem item = btnTaskCompletedInds.DropDownItems.Add(net.ToString());
                 item.Tag = net;
                 item.Click += TaskCompletedNet_Click;
-
             }
 
         }
@@ -524,8 +523,6 @@ namespace NWSEExperiment
             }
             return null;
         }
-
-
 
         private void runStep5ToolStripMenuItem_Click(object sender, EventArgs e)
         {

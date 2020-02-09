@@ -11,28 +11,28 @@
   <agent shorttermcapacity="20">
     <receptors>
       <env>
-        <sensor name="d1" desc="left rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
+        <sensor name="d1" desc="left rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
           <properties>
             <property cataory="direction" type="spatial" value="0.25"></property>
           </properties>     
         </sensor>
-        <sensor name="d2" desc="leftfront rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
+        <sensor name="d2" desc="leftfront rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
           <properties><property cataory="direction" type="spatial" value="0.375"></property>
           </properties>
         </sensor>
-        <sensor name="d3" desc="front rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
+        <sensor name="d3" desc="front rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
           <properties><property cataory="direction" type="spatial" value="0.5"></property>
           </properties>
         </sensor>
-        <sensor name="d4" desc="rightfront rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
+        <sensor name="d4" desc="rightfront rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
           <properties><property cataory="direction" type="spatial" value="0.675"></property>
           </properties>
         </sensor>
-        <sensor name="d5" desc="right rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
+        <sensor name="d5" desc="right rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
           <properties><property cataory="direction" type="spatial" value="0.75"></property>
           </properties>
         </sensor>
-        <sensor name="d6" desc="rear rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
+        <sensor name="d6" desc="rear rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
           <properties><property cataory="direction" type="spatial" value="1.0"></property>
           </properties>
         </sensor>
@@ -66,7 +66,7 @@
       
       <actions>
         <!-- <sensor name="_a1" cataory="speed" group="action" range="[0 - 1]" level="[5-5]"/>-->
-        <sensor name="_a2" desc="rotate" cataory="direction" group="action" abstractLevel="0" levels="13" levelNames="-180度,-150度,-120度,-90度,-60度,-30度,0度,30度,60度,90度,120度,150度,180度"/>
+        <sensor name="_a2" desc="rotate" cataory="direction" group="action" abstractLevel="1" levels="13" levelNames="-180度,-135度,-90度,-45度,0度,45度,90度,135度,180度"/>
       </actions>
     </receptors>
     <noise sensorNoise="0" effectorNoise="0" headingNoise="0"></noise> 
@@ -77,12 +77,12 @@
     <imagination abstractLevel="0"></imagination>
   </learning>
 
-  <evaluation reward_method="collision" timeStep="1.0" run_count="300" end_distance="100" gene_reability_range="[0.5-0.995+0.01]">
+  <evaluation reward_method="collision" timeStep="1.0" run_count="300" end_distance="100" gene_reability_range="[0.5-0.7+0.01]">
     <reward collision="-50" normal="0.1" away="1.0"></reward>
   </evaluation>
   
-  <evolution propagate_base_count="3" iter_count="300">
-    <selection min_population_capacity="50" max_population_capacity="1000" reability_lowlimit="0.25"></selection>
+  <evolution propagate_base_count="2" iter_count="300">
+    <selection min_population_capacity="30" max_population_capacity="150" reability_lowlimit="0.35"></selection>
     <mutate handlerprob="0.25,0.25,0,0,0,0,0,0.25,0.25"></mutate>  
   </evolution>
 

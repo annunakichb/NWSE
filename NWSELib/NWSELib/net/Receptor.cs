@@ -33,7 +33,7 @@ namespace NWSELib.net
         /// <returns></returns>
         public override Object activate(Network net, int time, Object value = null)
         {
-            value = getRankedValue((double)value);
+            //double rankedvalue = getRankedValue((double)value);
             Object prevValue = base.activate(net, time, value);
             return prevValue;
         }
@@ -58,7 +58,7 @@ namespace NWSELib.net
             { 
                 Vector v = values.Count <= 0 ? null : values.ToArray()[values.Count - 1];
                 if (v == null) return v;
-                return MeasureTools.GetMeasure(this.Cataory).getRankedValue(v, this.getGene().AbstractLevel, this.getGene().AbstractSectionCount);
+                return getRankedValue((double)v[0]);
             }
         }
 
@@ -73,13 +73,13 @@ namespace NWSELib.net
             if (names == null) return value.ToString();
             int sectionCount = this.getGene().AbstractSectionCount;
             int rankIndex = MeasureTools.GetMeasure(this.Cataory).getRankedIndex(value, this.getGene().AbstractLevel, sectionCount);
-            return names[rankIndex]+"("+value[0].ToString("F4")+")";
+            return value[0].ToString("F4")+"("+ names[rankIndex] + ")";
         }
 
         public override List<Vector> ValueList
         {
             get => new List<Vector>(this.values).ConvertAll(v=>
-                new Vector(MeasureTools.GetMeasure(this.Cataory).getRankedValue(v, this.getGene().AbstractLevel, this.getGene().AbstractSectionCount)));
+                new Vector(this.getRankedValue(v)));
         }
 
         public override List<Vector> GetValues(int new_time, int count)
@@ -96,7 +96,7 @@ namespace NWSELib.net
                 r.Add(values[tindex++]);
             }
             return r.ConvertAll(v=>
-                new Vector(MeasureTools.GetMeasure(this.Cataory).getRankedValue(v, this.getGene().AbstractLevel, this.getGene().AbstractSectionCount))
+                new Vector(this.getRankedValue(v[0]))
             );
         }
 
@@ -105,14 +105,14 @@ namespace NWSELib.net
             int tindex = times.IndexOf(time);
             if (tindex < 0) return null;
             if (tindex - backIndex < 0) return null;
-            return new Vector(MeasureTools.GetMeasure(this.Cataory).getRankedValue(this.ValueList[tindex - backIndex], this.getGene().AbstractLevel, this.getGene().AbstractSectionCount));
+            return new Vector(getRankedValue(this.ValueList[tindex - backIndex]));
             
         }
         public override Vector GetValue(int time)
         {
             int tindex = times.IndexOf(time);
             if (tindex < 0) return null;
-            return new Vector(MeasureTools.GetMeasure(this.Cataory).getRankedValue(this.values[tindex], this.getGene().AbstractLevel, this.getGene().AbstractSectionCount));
+            return new Vector(getRankedValue(this.values[tindex]));
         }
         #endregion
 

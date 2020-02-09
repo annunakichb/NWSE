@@ -58,6 +58,17 @@ namespace NWSELib.net
         }
         #endregion
 
+        #region 推理情景记录管理
+        public void removeWrongRecords()
+        {
+            for(int i=0;i<this.records.Count;i++)
+            {
+                if(this.records[i].accuracy <= 0)
+                    this.records.RemoveAt(i--);
+            }
+        }
+        #endregion
+
         #region 初始化
         public readonly List<Receptor> conditionReceptors;
         public readonly List<Receptor> variablesReceptors;

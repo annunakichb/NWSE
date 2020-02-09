@@ -362,7 +362,8 @@ namespace NWSELib.net
             List<double> dvs = this.ditanceFromVariable(realVarValues);
 
             int n1 = realCondValues.size(), n2 = realVarValues.size();
-            this.accuracy = 1 - (n1 * dc + dvs.Sum()) / (n1 + n2);
+            //this.accuracy = 1 - (n1 * dc + dvs.Sum()) / (n1 + n2);
+            this.accuracy = 1 - dvs.Average();
 
             return this.accuracy;
         }
@@ -370,22 +371,6 @@ namespace NWSELib.net
 
         #region 环境与推理的匹配性检查
 
-        private List<Node> _cached_condNodes;
-        public List<Node> CachedCondNodes
-        {
-            get
-            {
-                if (_cached_condNodes != null)
-                    return _cached_condNodes;
-                List<int> condIds = inf.getGene().getConditions().ConvertAll(c => c.Item1);
-                _cached_condNodes = condIds.ConvertAll(id => inf.net.getNode(id));
-                return _cached_condNodes;
-            }
-            set
-            {
-                _cached_condNodes = value;
-            }
-        }
         
         
         public bool isConditionValueMatch(List<Vector> condValues, out double distance)
@@ -437,14 +422,13 @@ namespace NWSELib.net
         
         public List<double> distance(List<Vector> value)
         {
-            List<Receptor> receptors = this.inf.getGene().getLeafGenes().ConvertAll(g => (Receptor)this.inf.net[g.Id]);
             Vector v1 = value.flatten().Item1;
             Vector v2 = this.means.flatten().Item1;
 
             List<double> distances = new List<double>();
-            for (int i = 0; i < receptors.Count; i++)
+            for (int i = 0; i < this.inf.receptors.Count; i++)
             {
-                double d = receptors[i].distance(v1[i], v2[i]);
+                double d = this.inf.receptors[i].distance(v1[i], v2[i]);
                 distances.Add(d);
             }
             return distances;

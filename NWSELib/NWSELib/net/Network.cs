@@ -55,7 +55,7 @@ namespace NWSELib.net
         {
             return "net id="+Id.ToString()+",fitness="+
                 this.Fitness.ToString("F4")+
-                ",reability="+this.AverageReability.ToString("F4");
+                ",reability="+this.Reability.ToString("F4");
         }
         #endregion
 
@@ -188,9 +188,7 @@ namespace NWSELib.net
         {
             this.nodes.ForEach(a => a.Reset());
             this.nodes.ForEach(n => n.think_reset());
-            this.Inferences.ForEach(inf =>
-                inf.Records.ForEach(r => r.CachedCondNodes = null)
-            ) ;
+            
             eplison = 1.0;
         }
         public void thinkReset()
@@ -296,7 +294,7 @@ namespace NWSELib.net
         /// <summary>
         /// 网络可靠度
         /// </summary>
-        public double AverageReability
+        public double Reability
         {
             get 
             {
@@ -381,7 +379,9 @@ namespace NWSELib.net
             {
                 Inference inf = this.Inferences[i];
                 inf.Records.ForEach(r => r.adjustAccuracy(time));
-                
+                inf.removeWrongRecords();
+
+
             }
             //4. 记忆整理
             for (int i=0;i<this.Inferences.Count;i++)
