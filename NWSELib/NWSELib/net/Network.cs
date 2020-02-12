@@ -645,12 +645,13 @@ namespace NWSELib.net
         {
             //检查传播终止条件
             if (records == null || records.Count <= 0) return;
-            if (records.All(r => !r.inf.getGene().hasEnvDenpend())) return;
+            //if (records.All(r => !r.inf.getGene().hasEnvDenpend())) return;
             
             //计算奖励并分配
             double rr = reward;
             if (mode == 1) rr = Math.Exp(-level) * reward;
-            records.ForEach(r => { if (r.inf.getGene().hasEnvDenpend()) r.evulation += rr; });
+            //records.ForEach(r => { if (r.inf.getGene().hasEnvDenpend()) r.evulation += rr; });
+            records.ForEach(r =>  r.evulation += rr );
             if (mode == 3) return;
             if (level >= 5) return;
 
@@ -691,7 +692,62 @@ namespace NWSELib.net
             );
 
         }
-        public void setReward(double reward,int time,int mode = 1,bool clear=true)
+        public void setReward(double reward, int time, int mode = 1, bool clear = true)
+        {
+            if (reward == 0) return;
+            if (actionPlanTraces.Count <= 0) return;
+            for (int i = actionPlanTraces.Count - 1; i >= 0; i--)
+            {
+                double r = Math.Exp(i - this.actionPlanTraces.Count + 1) * reward;
+                if (actionPlanTraces[i].inferencesItems.Count > 0)
+                {
+                    actionPlanTraces[i].inferencesItems.ForEach(item =>
+                        item.Item2.evulation += r
+                    );
+                }else if(i == actionPlanTraces.Count - 1)
+                {
+                    List<InferenceRecord> infRecords = getMatchRecordsInThink(actionPlanTraces[i].inputObs,time);
+                    if (infRecords.Count > 0)
+                        infRecords.ForEach(item => item.evulation += r);
+                }
+                if (reward == Session.GetConfiguration().evaluation.reward.away)
+                    return;
+
+            }
+            if (reward == Session.GetConfiguration().evaluation.reward.collision)
+                actionPlanTraces.Clear();
+        }
+
+        private List<InferenceRecord> getMatchRecordsInThink(List<Vector> obs,int time)
+        {
+            thinkReset();
+            for (int j = 0; j < this.Receptors.Count; j++)
+            {
+                this.Receptors[j].think(this, time, obs[j]);
+            }
+            this.Handlers.ForEach(h => h.think(this, time, null));
+
+            List<InferenceRecord> temp = new List<InferenceRecord>();
+            for (int j = 0; j < this.imagination.inferences.Count; j++)
+            {
+                Inference inf = this.imagination.inferences[j];
+                //if (!inf.getGene().hasEnvDenpend()) continue; //根外界环境无关的不做评估
+                List<(InferenceRecord, double)> matchedRecords = inf.getMatchRecordsInThink(this, time);
+                if (matchedRecords == null || matchedRecords.Count <= 0) continue;
+                for (int k = 0; k < matchedRecords.Count; k++)
+                {
+                    if (temp.Contains(matchedRecords[k].Item1))
+                    {
+                        matchedRecords.RemoveAt(k--);
+                    }
+                }
+                if (matchedRecords == null || matchedRecords.Count <= 0) continue;
+                temp.AddRange(matchedRecords.ConvertAll(m => m.Item1));
+                
+            }
+            return temp;
+        }
+        public void setReward1(double reward,int time,int mode = 1,bool clear=true)
         {
             if (reward == 0) return;
             if (actionPlanTraces.Count <= 0) return;
@@ -710,7 +766,7 @@ namespace NWSELib.net
                 for (int j=0;j<this.imagination.inferences.Count;j++)
                 {
                     Inference inf = this.imagination.inferences[j];
-                    if (!inf.getGene().hasEnvDenpend()) continue; //根外界环境无关的不做评估
+                    //if (!inf.getGene().hasEnvDenpend()) continue; //根外界环境无关的不做评估
                     List<(InferenceRecord,double)> matchedRecords = inf.getMatchRecordsInThink(this,time);
                     if (matchedRecords == null || matchedRecords.Count <= 0) continue;
                     for(int k=0;k<matchedRecords.Count;k++)
@@ -733,7 +789,8 @@ namespace NWSELib.net
                 
                 if (mode == REWARD_ONCE) break;
             }
-            if (reward == Session.GetConfiguration().evaluation.reward.collision) actionPlanTraces.Clear();
+            if (reward == Session.GetConfiguration().evaluation.reward.collision) 
+                actionPlanTraces.Clear();
         }
         #endregion
 

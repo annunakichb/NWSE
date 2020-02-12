@@ -522,7 +522,7 @@ namespace NWSELib.net
                         }
                         
                     }
-                    if (!inte.getGene().hasEnvDenpend()) continue;
+                    //if (!inte.getGene().hasEnvDenpend()) continue;
                     int tindex = matchedRecords.ConvertAll(m => m.Item2).argmin();
                     eva += matchedRecords[tindex].Item1.evulation * (1 - matchedRecords[tindex].Item2);
                     //totaldis += (1 - matchedRecord.Item2);
@@ -596,6 +596,8 @@ namespace NWSELib.net
                 nodes.Add(h);
             return nodes;
         }
+
+
         /// <summary>
         /// 生成的测试集第一个是本能动作，第二个是方向不变动作，然后逐渐向两边增大
         /// </summary>
