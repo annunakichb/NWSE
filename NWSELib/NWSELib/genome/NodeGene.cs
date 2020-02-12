@@ -251,12 +251,12 @@ namespace NWSELib.genome
             return "id=" + this.id.ToString() + ",name=" + this.name +
                 ",generation=" + this.generation + ",cataory=" + this.cataory + ",group=" + this.group;
         }
-        public static NodeGene parseGene(String s)
+        public static NodeGene parseGene(NWSEGenome genome,String s)
         {
             if (s == null || s.Trim() == "") return null;
-            if (s.StartsWith("ReceptorGene")) return ReceptorGene.parse(s);
-            else if (s.StartsWith("HandlerGene")) return HandlerGene.parse(s);
-            else if (s.StartsWith("InferenceGene")) return InferenceGene.parse(s);
+            if (s.StartsWith("ReceptorGene")) return ReceptorGene.parse(genome,s);
+            else if (s.StartsWith("HandlerGene")) return HandlerGene.parse(genome,s);
+            else if (s.StartsWith("InferenceGene")) return InferenceGene.parse(genome,s);
             return null;
         }
         /// <summary>
@@ -291,14 +291,11 @@ namespace NWSELib.genome
 
             i1 = str.IndexOf("group");
             i2 = str.IndexOf("=", i1 + 1);
-            i3 = str.IndexOf(",", i2 + 1);
+            i3 = str.Length;
             s = str.Substring(i2 + 1, i3 - i2 - 1);
             group = s;
 
-            i1 = str.IndexOf("sectionCount");
-            i2 = str.IndexOf("=", i1 + 1);
-            i3 = str.IndexOf(",", i2 + 1);
-            s = str.Substring(i2 + 1, i3 - i2 - 1);
+            
             
         }
         /// <summary>

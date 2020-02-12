@@ -116,7 +116,7 @@ namespace NWSELib.genome
         }
 
 
-        public static HandlerGene parse(String s)
+        public static HandlerGene parse(NWSEGenome genome, String s)
         {
             int t1 = s.IndexOf("info");
             int t2 = s.IndexOf(":",t1+1);
@@ -135,7 +135,7 @@ namespace NWSELib.genome
             String inputstr = s.Substring(t2 + 1, t3 - t2 - 1).Trim();
             List<int> inputids = Utility.parse<int>(inputstr);
             //解析info
-            HandlerGene gene = new HandlerGene(null, function, inputids, null);
+            HandlerGene gene = new HandlerGene(genome, function, inputids, null);
             gene.parseInfo(info);
             //解析参数
             t1 = s.IndexOf("param");

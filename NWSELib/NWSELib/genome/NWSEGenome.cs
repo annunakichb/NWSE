@@ -110,25 +110,28 @@ namespace NWSELib.genome
             {
                 if (s == null || s.Trim() == "") continue;
                 if (s.StartsWith("ReceptorGene"))
-                    genome.receptorGenes.Add(ReceptorGene.parse(s));
+                    genome.receptorGenes.Add(ReceptorGene.parse(genome,s));
                 else if (s.StartsWith("HandlerGene"))
-                    genome.handlerGenes.Add(HandlerGene.parse(s));
+                    genome.handlerGenes.Add(HandlerGene.parse(genome,s));
                 else if (s.StartsWith("InferenceGene"))
-                    genome.infrernceGenes.Add(InferenceGene.parse(s));
+                    genome.infrernceGenes.Add(InferenceGene.parse(genome,s));
                 else if (s.StartsWith("handlerSelectionProb"))
                 {
+                    int s2 = s.IndexOf("handlerSelectionProb");
+                    s2 = s.IndexOf("=", s2 + 1);
+                    String s3 = s.Substring(s2+1).Trim();
                     genome.handlerSelectionProb.Clear();
-                    genome.handlerSelectionProb.AddRange(Utility.parse<double>(s));
+                    genome.handlerSelectionProb.AddRange(Utility.parse<double>(s3));
                 }
                 else if (s.StartsWith("invaild"))
                 {
                     String s2 = s.Substring(s.IndexOf("="));
-                    genome.invaildInferenceNodes.Add(InferenceGene.parse(s2));
+                    genome.invaildInferenceNodes.Add(InferenceGene.parse(genome,s2));
                 }
                 else if (s.StartsWith("vaild"))
                 {
                     String s2 = s.Substring(s.IndexOf("="));
-                    genome.vaildInferenceNodes.Add(NodeGene.parseGene(s2));
+                    genome.vaildInferenceNodes.Add(NodeGene.parseGene(genome,s2));
                 }
             }
 

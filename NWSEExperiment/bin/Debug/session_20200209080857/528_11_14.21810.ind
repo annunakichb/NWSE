@@ -1,4 +1,4 @@
-394
+528
 ReceptorGene:d1;info:id=1,name=d1,generation=1,cataory=distance,group=env.distance;param:abstractLevel=0
 ReceptorGene:d2;info:id=2,name=d2,generation=1,cataory=distance,group=env.distance;param:abstractLevel=0
 ReceptorGene:d3;info:id=3,name=d3,generation=1,cataory=distance,group=env.distance;param:abstractLevel=0
@@ -13,7 +13,11 @@ ReceptorGene:b;info:id=11,name=b,generation=1,cataory=onoff,group=env.collision;
 ReceptorGene:pos;info:id=12,name=pos,generation=1,cataory=poscode,group=env.position;param:abstractLevel=0
 ReceptorGene:heading;info:id=13,name=heading,generation=1,cataory=direction,group=body.heading;param:abstractLevel=1
 ReceptorGene:_a2;info:id=14,name=_a2,generation=1,cataory=direction,group=action;param:abstractLevel=1
-InferenceGene:d1,g1,heading,_a2=>g2;dimensions:1,8,13,14=>8;info:id=272,name=,generation=2,cataory=,group=;param:
-InferenceGene:d2,d4,d5,d6,heading,_a2=>d3;dimensions:2,4,5,6,13,14=>3;info:id=617,name=,generation=1,cataory=,group=;param:
+InferenceGene:d1,d2,d3,d4,d5,d6,_a2=>d3;info:id=15,name=,generation=1,cataory=,group=;param:
+InferenceGene:d1,g4,heading,_a2=>g2;info:id=47,name=,generation=2,cataory=,group=;param:
+InferenceGene:d1,d5,d6=>g2;info:id=186,name=,generation=6,cataory=,group=;param:
+InferenceGene:d1,d6,g1,g2,g3,g4,b,pos,heading,_a2=>heading;info:id=689,name=,generation=8,cataory=,group=;param:
+InferenceGene:d4=>pos;info:id=751,name=,generation=11,cataory=,group=;param:
 handlerSelectionProb=0.250,0.250,0.000,0.000,0.000,0.000,0.000,0.250,0.250
-invaild=InferenceGene:d1,g1,pos,_a2=>pos;dimensions:1,7,12,14=>12;info:id=44,name=,generation=3,cataory=,group=;param:
+invaild=InferenceGene:d1,g1,pos,_a2=>pos;info:id=44,name=,generation=3,cataory=,group=;param:
+invaild=InferenceGene:d2,g1=>d3;info:id=593,name=,generation=9,cataory=,group=;param:

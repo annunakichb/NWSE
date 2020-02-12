@@ -129,10 +129,10 @@ namespace NWSELib.genome
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
-        public static ReceptorGene parse(String s)
+        public static ReceptorGene parse(NWSEGenome genome,String s)
         {
             String[] ss = s.Split(';');
-            ReceptorGene gene = new ReceptorGene(null);
+            ReceptorGene gene = new ReceptorGene(genome);
             gene.name = ss[0].Substring(ss[0].IndexOf(":")+1).Trim();
 
             gene.parseInfo(ss[1].Substring(ss[1].IndexOf("info:")+5));

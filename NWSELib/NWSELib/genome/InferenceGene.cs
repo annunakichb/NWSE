@@ -193,34 +193,48 @@ namespace NWSELib.genome
         public override string ToString()
         {
             this.sort_dimension();
-            return "InferenceGene:" + Text + ";info:" + base.ToString() + ";param:";
+            String condstr = this.conditions.ConvertAll(c => c.Item1.ToString()).Aggregate((x, y) => x + "," + y);
+            String varstr = this.variables.ConvertAll(c => c.Item1.ToString()).Aggregate((x, y) => x + "," + y);
+            String dimensions = condstr + "=>" + varstr;
+            return "InferenceGene:" + Text + ";dimensions:"+ dimensions+";info:" + base.ToString() + ";param:";
         }
-        public static InferenceGene parse(String s)
+        public static InferenceGene parse(NWSEGenome genome,String s)
         {
-            int t1 = s.IndexOf("InferenceGene") + "InferenceGene".Length;
-            int t2 = s.IndexOf("info");
-            int t3 = s.IndexOf("param");
-            String s1 = s.Substring(t1, t2 - t1 - 3);//Text部分
-            String s2 = s.Substring(t2 + 5, t3 - t2 - 7);//info部分
-            String s3 = s.Substring(t3 + 6);//param部分
+            int t1 = s.IndexOf("InferenceGene:")+ "InferenceGene:".Length;
+            int t2 = s.IndexOf(";dimensions:") - 1;
+            String text = s.Substring(t1, t2 - t1 + 1).Trim();
 
-            //解析text
-            List<(int, int)> conditions = new List<(int, int)>();
-            int t4 = s1.IndexOf("<=>");
-            bool causeeffect_or_assocation = t4 < 0;
-            int t5 = s1.IndexOf("[");
-            while(t5>=0)
-            {
-                int t6 = s1.IndexOf("]",t5+1);
-                int geneid = Session.idGenerator.getGeneId(s1.Substring(t5 + 1, t6 - t5 - 1));
-                conditions.Add((geneid, (t6 < t4 ? 1 : 0)));
-            }
-            //解析info
-            InferenceGene gene = new InferenceGene(null);
-            gene.parseInfo(s2);
+            t2 += ";dimensions:".Length+1;
+            int t3 = s.IndexOf(";info:")-1;
+            String dimensions = s.Substring(t2, t3 - t2 + 1);
+
+            t3 += ";info:".Length;
+            int t4 = s.IndexOf(";param:")-1;
+            String info = s.Substring(t3, t4 - t3 + 1);
+
+            t3 += ";info:".Length;
+            String param = s.Substring(t3);
+
+
+            //解析dimensions
+            int t5 = dimensions.IndexOf("=>");
+            String condstr = dimensions.Substring(0, t5);
+            String varstr = dimensions.Substring(t5 + 2);
+            List<(int, int)> conditions = condstr.Split(',').ToList().ConvertAll(str => int.Parse(str))
+                .ConvertAll(v => (v, 1));
+            List<(int, int)> variables = varstr.Split(',').ToList().ConvertAll(str => int.Parse(str))
+                .ConvertAll(v => (v, 0));
+            List<(int, int)> d = new List<(int, int)>(conditions);
+            d.AddRange(variables);
 
 
             
+            //解析info
+            InferenceGene gene = new InferenceGene(genome);
+            gene.conditions = conditions;
+            gene.variables = variables;
+            gene.parseInfo(info);
+
             return gene;
         }
 
