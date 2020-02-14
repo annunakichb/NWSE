@@ -86,9 +86,23 @@ namespace NWSELib.net
             }
         }
 
-        
-        
-        
+        public static ActionPlan create(Network net,Vector action,int time,List<InferenceRecord> infRecords,String reason)
+        {
+            if (infRecords == null || infRecords.Count <= 0) return null;
+
+            ActionPlan plan = new ActionPlan();
+            plan.actions = action.ToList();
+            plan.evluation = infRecords.ConvertAll(r => r.evulation).Sum();
+            plan.inferencesItems = infRecords;
+            int t = 0;
+            plan.inputObs = net.Receptors.ConvertAll(r => r.getGene().IsActionSensor() ? new Vector(action[t++]) : r.Value);
+            plan.judgeTime = time;
+            plan.judgeType = reason;
+            return plan;
+
+        }
+
+
 
         public string print()
         {

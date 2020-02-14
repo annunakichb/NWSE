@@ -318,6 +318,28 @@ namespace NWSELib.net
 
             return result;
         }
+        /// <summary>
+        /// 查找所有条件匹配（不包含动作）的记录
+        /// </summary>
+        /// <param name="condValues">待匹配的值</param>
+        /// <param name="exact">是否精确匹配，即无误差匹配</param>
+        /// <returns></returns>
+        public List<InferenceRecord> getMatchRecordExcludeAction(List<Vector> condValues,bool exact=true)
+        {
+            if (condValues == null || condValues.Count <= 0) return new List<InferenceRecord>();
+
+            List<int> ids = this.getGene().getConditionsExcludeActionSensor();
+            List<InferenceRecord> results = new List<InferenceRecord>();
+            foreach(InferenceRecord record in this.records)
+            {
+                List<double> dis = record.distanceFromConditions(ids,condValues);
+                if (exact && dis.All(d => d == 0.0))
+                    results.Add(record);
+                else if (!exact && dis.All(d => d <= 1.0))
+                    results.Add(record);
+            }
+            return results;
+        }
 
         /// <summary>
         /// 取得部分条件啊匹配的记录，用于推理合成

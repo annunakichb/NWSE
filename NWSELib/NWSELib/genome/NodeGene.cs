@@ -123,6 +123,10 @@ namespace NWSELib.genome
         public virtual List<ReceptorGene> getLeafGenes()
         {
             List<ReceptorGene> r = new List<ReceptorGene>();
+            if (this is ReceptorGene)
+            {
+                r.Add((ReceptorGene)this);return r;
+            }
             return this.getLeafGenes(this, r);
         }
         private List<ReceptorGene> getLeafGenes(NodeGene g,List<ReceptorGene> r)

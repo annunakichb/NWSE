@@ -129,6 +129,20 @@ namespace NWSELib.net
         #endregion
 
         #region 均值处理
+        public Vector getActionValueInCondition()
+        {
+            List<Vector> vs = new List<Vector>();
+            List<int> actionIds = this.inf.getGene().getActionSensorsConditions();
+            List<int> condIds = this.inf.getGene().getConditionIds();
+            for(int i=0;i<condIds.Count;i++)
+            {
+                if(actionIds.Contains(condIds[i]))
+                {
+                    vs.Add(this.means[i]);
+                }
+            }
+            return vs.flatten().Item1;
+        }
         /// <summary>
         /// 分解均值为条件和结论部分
         /// </summary>
@@ -152,7 +166,7 @@ namespace NWSELib.net
         /// <param name="net"></param>
         /// <param name="record"></param>
         /// <returns></returns>
-        public (List<Vector>, List<Vector>, List<Vector>) splitMeans3(Network net)
+        public (List<Vector>, List<Vector>, List<Vector>) splitMeans3()
         {
             //待返回结果
             List<Vector> env = new List<Vector>();
@@ -160,7 +174,7 @@ namespace NWSELib.net
             List<Vector> expects = new List<Vector>();
 
             //动作比较特殊，每个动作都要设置结构，尽管该节点可能不涉及
-            int actioncount = net.Effectors.Count;
+            int actioncount = inf.net.Effectors.Count;
             for (int i = 0; i < actioncount; i++)
                 actions.Add(new Vector(0.5));//0.5表示啥都不做
 
@@ -169,11 +183,11 @@ namespace NWSELib.net
             List<(int, int)> conditions = inf.getGene().conditions;
             for (int i = 0; i < conditions.Count; i++)
             {
-                Node node = net.getNode(conditions[i].Item1);
+                Node node = inf.net.getNode(conditions[i].Item1);
                 if (node.Gene.IsActionSensor())
                 {
-                    Effector effector = (Effector)net.Effectors.FirstOrDefault(e => "_" + e.Name == node.Name);
-                    int effectorIndex = net.Effectors.IndexOf(effector);
+                    Effector effector = (Effector)inf.net.Effectors.FirstOrDefault(e => "_" + e.Name == node.Name);
+                    int effectorIndex = inf.net.Effectors.IndexOf(effector);
                     actions[effectorIndex] = means[i];
                 }
                 else
@@ -402,6 +416,21 @@ namespace NWSELib.net
             }
 
             return distances;
+        }
+
+        public List<double> distanceFromConditions(List<int> ids, List<Vector> values)
+        {
+            Vector v1 = values.flatten().Item1;
+            Vector v2 = this.splitMeans3().Item1.flatten().Item1;
+
+            List<Receptor> receptors = inf.net.Genome.getReceptorGenes(ids.ToArray()).ConvertAll(g=>(Receptor)inf.net[g.Id]);
+            List<double> dis = new List<double>();
+            for(int i=0;i< receptors.Count;i++)
+            {
+                dis.Add(receptors[i].distance(v1[i],v2[i]));
+            }
+
+            return dis;
         }
 
         public List<double> ditanceFromVariable(List<Vector> value)

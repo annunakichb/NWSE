@@ -50,6 +50,10 @@ namespace NWSELib.net
         /// 抽象思维
         /// </summary>
         public Imagination imagination;
+        /// <summary>
+        /// 策略单元
+        /// </summary>
+        public Policy policy;
 
         public override string ToString()
         {
@@ -246,7 +250,8 @@ namespace NWSELib.net
                 }
             }
 
-            imagination = new Imagination(this);
+            //imagination = new Imagination(this);
+            policy = new Policy(this);
         }
 
 
@@ -396,10 +401,11 @@ namespace NWSELib.net
             this.setReward(reward, time, 1);
 
             //6. 归纳
-            if (Session.GetConfiguration().learning.imagination.abstractLevel > 0)
+            /*if (Session.GetConfiguration().learning.imagination.abstractLevel > 0)
                 imagination.doAbstract();
             else
                 imagination.inferences = new List<Inference>(this.Inferences);
+            */
             //imagination.inferences = this.Inferences;
 
             //6. 推理
@@ -416,8 +422,10 @@ namespace NWSELib.net
             }
             else 
             {
-                plan = imagination.doImagination(time, session);
+                plan = policy.doImagination(time, session);
                 if (plan == null) plan = createDefaultPlan(time);
+                //plan = imagination.doImagination(time, session);
+                //if (plan == null) plan = createDefaultPlan(time);
             }
             this.actionPlanTraces.Add(plan);
             setEffectValue(time);

@@ -310,6 +310,21 @@ namespace NWSELib.genome
         {
             return this.receptorGenes.FindAll(r => r.Group.StartsWith("env") || r.Group.StartsWith("body"));
         }
+        /// <summary>
+        /// 取得ids对应的所有感受器基因
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        public List<ReceptorGene> getReceptorGenes(params int[] ids)
+        {
+            List<ReceptorGene> r = new List<ReceptorGene>();
+            if (ids == null || ids.Length <= 0) return r;
+            foreach(int id in ids)
+            {
+                r.AddRange(this[id].getLeafGenes());
+            }
+            return r;
+        }
 
         public List<NodeGene> getReceptorAndHandlerGenes()
         {
