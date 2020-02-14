@@ -50,10 +50,11 @@ namespace NWSELib.net
         { 
             get
             {
-                if(this.records.Count<=0)return double.NaN;
+                return this.computeReability();
+                /*if(this.records.Count<=0)return double.NaN;
                 List<double> ds = this.records.FindAll(r => !double.IsNaN(r.accuracy)).ConvertAll(r => r.accuracy);
                 if (ds == null || ds.Count <= 0) return double.NaN;
-                return ds.Average();
+                return ds.Average();*/
             }
         }
         #endregion
@@ -300,14 +301,20 @@ namespace NWSELib.net
             List<Vector> values = conds.ConvertAll(cond =>
                 net.getNode(cond.Item1).getThinkValues(time)
             );
-            foreach(InferenceRecord record in this.records)
+            double min = double.MaxValue;
+            InferenceRecord r = null;
+            foreach (InferenceRecord record in this.records)
             {
                 double distance = 0.0;
-                if (record.isConditionValueMatch(values, out distance))
+                record.isConditionValueMatch(values, out distance);
+                if(distance < min)
                 {
-                    result.Add((record,distance));
+                    r = record;
+                    min = distance;
                 }
             }
+            if(r != null)
+                result.Add((r, min));
 
             return result;
         }
@@ -704,6 +711,43 @@ namespace NWSELib.net
             ws = ws.ConvertAll(w => w / max);
             for (int i = 0; i < this.records.Count; i++)
                 this.records[i].weight = ws[i];*/
+        }
+        /// <summary>
+        /// 调整准确度
+        /// </summary>
+        public double computeReability()
+        {
+            if (this.records.Count <= 0) return double.NaN;
+
+            List<InferenceRecord> records = new List<InferenceRecord>(this.records);
+
+            double groupCount = 0,totalcount = records.Count;
+            while(records.Count>0)
+            {
+                InferenceRecord record = records[0];
+                (List<Vector> condValues,List<Vector> varValues) = record.getMeanValues();
+                records.Remove(record);
+                groupCount += 1;
+
+                int count = 0;
+                for (int j=0;j<records.Count;j++)
+                {
+                    (List<Vector> cValues, List<Vector> vValues) = records[j].getMeanValues();
+                    if(Vector.equals(condValues, cValues) && 
+                       !Vector.equals(varValues,vValues))
+                    {
+                        records.RemoveAt(j--);
+                        count += 1;
+                    }
+                }
+                if (count == 0 && record.acceptCount == 1)
+                {
+                    groupCount -= 1;
+                    totalcount -= 1;
+                }
+            }
+            
+            return groupCount / totalcount;
         }
         #endregion
 

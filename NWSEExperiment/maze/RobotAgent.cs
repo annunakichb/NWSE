@@ -745,7 +745,7 @@ namespace NWSEExperiment.maze
         public void drawEvaulation(Graphics g, CoordinateFrame frame)
         {
             if (this.net.lastActionPlan == null) return;
-            List<(List<double>,double,List<Vector>)> records = this.net.lastActionPlan.actionEvaulationRecords;
+            List<(List<double>,double)> records = this.net.lastActionPlan.actionEvaulationRecords;
             if (records == null || records.Count <= 0) return;
             //records = records.FindAll(r => !double.IsNaN(r.Item2));
             //if (records == null || records.Count <= 0) return;
@@ -758,7 +758,7 @@ namespace NWSEExperiment.maze
             
             for(int i=0;i< records.Count;i++)
             {
-                (List<double>, double,List<Vector>) r = records[i];
+                (List<double>, double) r = records[i];
                 double action = r.Item1[0];
                 double futureHeading  = Heading + (action - 0.5) * Max_Rotate_Action * 2;
                 if (futureHeading < 0) futureHeading += 2 * Math.PI;

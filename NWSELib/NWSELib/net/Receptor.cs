@@ -67,7 +67,7 @@ namespace NWSELib.net
             if (value == null) value = Value;
             if (value == null) return "";
             if (this.getGene().AbstractLevel == 0)
-                return value[0].ToString("F3");
+                return value[0].ToString("F4");
 
             List<String> names = this.getGene().AbstractLevelNames;
             if (names == null) return value.ToString();

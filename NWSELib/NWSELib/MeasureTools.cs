@@ -44,7 +44,7 @@ namespace NWSELib
         {
             if (abstractLevel == 0) return originValue;
             
-            double unit = this.Range.Distance / sectionCount;
+            double unit = this.Range.Distance / (sectionCount-1);
             double t = originValue / unit;
             int index = (int)t;
             double newValue = Range.Min + index * unit;
@@ -263,7 +263,9 @@ namespace NWSELib
             double c2 = d2 * 10000;
             int x1 = (int)c1 / 100, y1 = (int)c1 % 100;
             int x2 = (int)c2 / 100, y2 = (int)c2 % 100;
-            return (Math.Abs(x1 - x2) + Math.Abs(y1 - y2)) / tolerate;
+            double d = (Math.Abs(x1 - x2) + Math.Abs(y1 - y2));
+            if (d <= tolerate) return 0;
+            return d / tolerate;
         }
 
         #region 分级处理

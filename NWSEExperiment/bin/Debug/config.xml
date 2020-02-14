@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <configuration>
   <mensurations>
-    <mensuration name="distance" caption="distance" tolerate="0.2" levels="5" levelNames="极小,较小,中等,较大,较大" range="[0.0-1.0]" typeName="NWSELib.DistanceMeasure" dimension="1" ></mensuration>
+    <mensuration name="distance" caption="distance" tolerate="0.2" levels="3" levelNames="较近,中等,较远" range="[0.0-1.0]" typeName="NWSELib.DistanceMeasure" dimension="1" ></mensuration>
     <mensuration name="direction" caption="direction" tolerate="0.083" levels="8" levelNames="东,东南,南,西南,西,西北,北,东北" range="[0.0-1.0]" typeName="NWSELib.DirectionMeasure" dimension="1" ></mensuration>
     <mensuration name="poscode" caption="poscode" tolerate="32" levels="" levelNames="" range="[0.0-1.0]" typeName="NWSELib.PositionCodeMeasure" dimension="1" ></mensuration>
     <mensuration name="onoff" caption="onoff" tolerate="0" levels="2" levelNames="无,有" range="[0.0-1.0]" typeName="NWSELib.OnoffMeasure" dimension="1" ></mensuration>
@@ -11,28 +11,28 @@
   <agent shorttermcapacity="20">
     <receptors>
       <env>
-        <sensor name="d1" desc="left rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
+        <sensor name="d1" desc="left rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
           <properties>
             <property cataory="direction" type="spatial" value="0.25"></property>
           </properties>     
         </sensor>
-        <sensor name="d2" desc="leftfront rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
+        <sensor name="d2" desc="leftfront rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
           <properties><property cataory="direction" type="spatial" value="0.375"></property>
           </properties>
         </sensor>
-        <sensor name="d3" desc="front rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
+        <sensor name="d3" desc="front rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
           <properties><property cataory="direction" type="spatial" value="0.5"></property>
           </properties>
         </sensor>
-        <sensor name="d4" desc="rightfront rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
+        <sensor name="d4" desc="rightfront rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
           <properties><property cataory="direction" type="spatial" value="0.675"></property>
           </properties>
         </sensor>
-        <sensor name="d5" desc="right rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
+        <sensor name="d5" desc="right rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
           <properties><property cataory="direction" type="spatial" value="0.75"></property>
           </properties>
         </sensor>
-        <sensor name="d6" desc="rear rangefinder" cataory="distance" group="env.distance" abstractLevel="0">
+        <sensor name="d6" desc="rear rangefinder" cataory="distance" group="env.distance" abstractLevel="1">
           <properties><property cataory="direction" type="spatial" value="1.0"></property>
           </properties>
         </sensor>
@@ -66,18 +66,18 @@
       
       <actions>
         <!-- <sensor name="_a1" cataory="speed" group="action" range="[0 - 1]" level="[5-5]"/>-->
-        <sensor name="_a2" desc="rotate" cataory="direction" group="action" abstractLevel="1" levels="13" levelNames="-180度,-135度,-90度,-45度,0度,45度,90度,135度,180度"/>
+        <sensor name="_a2" desc="rotate" cataory="direction" group="action" abstractLevel="1" levels="16" levelNames="-180度,-157.5度,-135度,-112.5度,-90度,-67.5度,-45度,-22.5度,0度,22.5度,45度,90度,112.5度,135度,157.5度,180度"/>
       </actions>
     </receptors>
     <noise sensorNoise="0" effectorNoise="0" headingNoise="0"></noise> 
   </agent>
 
   <learning>
-    <inference accept_prob="0.7" accept_max_count="3" inference_distance="0.1"></inference>
+    <inference accept_prob="0.85" accept_max_count="3" inference_distance="0.1"></inference>
     <imagination abstractLevel="0"></imagination>
   </learning>
 
-  <evaluation reward_method="collision" timeStep="1.0" run_count="300" end_distance="100" gene_reability_range="[0.5-0.7+0.01]">
+  <evaluation reward_method="collision" timeStep="1.0" run_count="300" end_distance="100" gene_reability_range="[0.5-0.98+0.01]">
     <reward collision="-50" normal="0.1" away="1.0"></reward>
   </evaluation>
   

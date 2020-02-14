@@ -405,6 +405,13 @@ namespace NWSEExperiment.maze
         }
         public double compute_reward_optiomatraces(RobotAgent agent)
         {
+            if (agent.PrevCollided && !agent.HasCollided)
+                return 1.0;
+            else if (!agent.PrevCollided && agent.HasCollided)
+                return -50.0;
+            else if (agent.PrevCollided && agent.HasCollided)
+                return -50.0;
+
             //计算离Agent的前一个点最近的最优点
             int optima_index=-1,posindex=-1;
             double min = double.MaxValue ;

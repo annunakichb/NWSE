@@ -26,7 +26,7 @@ namespace NWSELib.genome
         private int getAbstractSectionCount(int abstraceLevel)
         {
             Configuration.Sensor s = Session.GetConfiguration().agent.receptors.GetSensor(this.name);
-            if (s != null && s.Levels != null && abstraceLevel < s.Levels.Count)
+            if (s != null && s.Levels != null && abstraceLevel <= s.Levels.Count)
             {
                 return abstraceLevel==0?s.Levels[abstraceLevel]: s.Levels[abstraceLevel-1];
             }

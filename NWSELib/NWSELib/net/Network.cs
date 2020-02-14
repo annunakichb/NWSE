@@ -374,7 +374,15 @@ namespace NWSELib.net
                 this.Handlers.ForEach(n => n.activate(this, time, null));
             }
 
-            //3. 对现有推理记录的准确性进行评估
+            
+            //3. 记忆整理
+            for (int i=0;i<this.Inferences.Count;i++)
+            {
+                Inference inf = this.Inferences[i];
+                inf.activate(this, time);
+            }
+
+            //4. 对现有推理记录的准确性进行评估
             for (int i = 0; i < this.Inferences.Count; i++)
             {
                 Inference inf = this.Inferences[i];
@@ -383,13 +391,11 @@ namespace NWSELib.net
 
 
             }
-            //4. 记忆整理
-            for (int i=0;i<this.Inferences.Count;i++)
-            {
-                Inference inf = this.Inferences[i];
-                inf.activate(this, time);
-            }
-            //5. 归纳
+
+            //5. (上一次)行为评估
+            this.setReward(reward, time, 1);
+
+            //6. 归纳
             if (Session.GetConfiguration().learning.imagination.abstractLevel > 0)
                 imagination.doAbstract();
             else
@@ -399,12 +405,11 @@ namespace NWSELib.net
             //6. 推理
             //imagination.doInference(time, session);
 
-            //7. (上一次)行为评估
-            this.setReward(reward,time,1);
+            
 
-            //8. 推理想象、行为决策
+            //7. 推理想象、行为决策
             ActionPlan plan = null;
-            eplison = time == 0 ? 1.0 : 1 / Math.Sqrt(time);
+            eplison = time == 0 ? 1.0 : 1  - time/100.0;
             if (rng.NextDouble() <= eplison)
             {
                 plan = createDefaultPlan(time);
@@ -702,7 +707,7 @@ namespace NWSELib.net
                 if (actionPlanTraces[i].inferencesItems.Count > 0)
                 {
                     actionPlanTraces[i].inferencesItems.ForEach(item =>
-                        item.Item2.evulation += r
+                        item.evulation += r
                     );
                 }else if(i == actionPlanTraces.Count - 1)
                 {

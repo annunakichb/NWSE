@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle16 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle17 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle18 = new System.Windows.Forms.DataGridViewCellStyle();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.btnERun = new System.Windows.Forms.ToolStripButton();
@@ -43,8 +43,13 @@
             this.btnOpenFromFile = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.btnOpenDemoAgent = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnDemoSimple = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnDemoReability = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnDemoFull = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnDemoCustom = new System.Windows.Forms.ToolStripMenuItem();
             this.btnOpenLastOptima = new System.Windows.Forms.ToolStripMenuItem();
             this.btnOpenOptima = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnTaskCompletedInds = new System.Windows.Forms.ToolStripMenuItem();
             this.btnIEnvReset = new System.Windows.Forms.ToolStripButton();
             this.btnIInference = new System.Windows.Forms.ToolStripButton();
             this.btnIActions = new System.Windows.Forms.ToolStripButton();
@@ -112,7 +117,10 @@
             this.dataGridView = new System.Windows.Forms.DataGridView();
             this.ColumnGeneration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnMessage = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.btnTaskCompletedInds = new System.Windows.Forms.ToolStripMenuItem();
+            this.pictureBoxMaze = new System.Windows.Forms.PictureBox();
+            this.stepsToolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.stepsToolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
+            this.stepsToolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -136,10 +144,12 @@
             this.panel7.SuspendLayout();
             this.tabPage7.SuspendLayout();
             this.panel9.SuspendLayout();
+            this.pnlMaze.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage5.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxMaze)).BeginInit();
             this.SuspendLayout();
             // 
             // toolStrip1
@@ -244,10 +254,43 @@
             // 
             // btnOpenDemoAgent
             // 
+            this.btnOpenDemoAgent.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnDemoSimple,
+            this.btnDemoReability,
+            this.btnDemoFull,
+            this.btnDemoCustom});
             this.btnOpenDemoAgent.Name = "btnOpenDemoAgent";
             this.btnOpenDemoAgent.Size = new System.Drawing.Size(205, 22);
             this.btnOpenDemoAgent.Text = "Open Demo Agent";
             this.btnOpenDemoAgent.Click += new System.EventHandler(this.btnOpenDemoAgent_Click);
+            // 
+            // btnDemoSimple
+            // 
+            this.btnDemoSimple.Name = "btnDemoSimple";
+            this.btnDemoSimple.Size = new System.Drawing.Size(180, 22);
+            this.btnDemoSimple.Text = "Simple";
+            this.btnDemoSimple.Click += new System.EventHandler(this.btnDemoSimple_Click);
+            // 
+            // btnDemoReability
+            // 
+            this.btnDemoReability.Name = "btnDemoReability";
+            this.btnDemoReability.Size = new System.Drawing.Size(180, 22);
+            this.btnDemoReability.Text = "Reability";
+            this.btnDemoReability.Click += new System.EventHandler(this.btnDemoReability_Click);
+            // 
+            // btnDemoFull
+            // 
+            this.btnDemoFull.Name = "btnDemoFull";
+            this.btnDemoFull.Size = new System.Drawing.Size(180, 22);
+            this.btnDemoFull.Text = "Full";
+            this.btnDemoFull.Click += new System.EventHandler(this.btnDemoFull_Click);
+            // 
+            // btnDemoCustom
+            // 
+            this.btnDemoCustom.Name = "btnDemoCustom";
+            this.btnDemoCustom.Size = new System.Drawing.Size(180, 22);
+            this.btnDemoCustom.Text = "Custom";
+            this.btnDemoCustom.Click += new System.EventHandler(this.btnDemoCustom_Click);
             // 
             // btnOpenLastOptima
             // 
@@ -262,6 +305,12 @@
             this.btnOpenOptima.Size = new System.Drawing.Size(205, 22);
             this.btnOpenOptima.Text = "Open Optima Ind";
             this.btnOpenOptima.Click += new System.EventHandler(this.btnOpenOptima_Click);
+            // 
+            // btnTaskCompletedInds
+            // 
+            this.btnTaskCompletedInds.Name = "btnTaskCompletedInds";
+            this.btnTaskCompletedInds.Size = new System.Drawing.Size(205, 22);
+            this.btnTaskCompletedInds.Text = "Task Completed Inds";
             // 
             // btnIEnvReset
             // 
@@ -303,6 +352,9 @@
             this.stepToolStripMenuItem,
             this.stepToolStripMenuItem1,
             this.stepToolStripMenuItem2,
+            this.stepsToolStripMenuItem5,
+            this.stepsToolStripMenuItem3,
+            this.stepsToolStripMenuItem4,
             this.untilEndToolStripMenuItem});
             this.toolStripSplitButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripSplitButton1.Image")));
             this.toolStripSplitButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -346,25 +398,25 @@
             // stepToolStripMenuItem
             // 
             this.stepToolStripMenuItem.Name = "stepToolStripMenuItem";
-            this.stepToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.stepToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.stepToolStripMenuItem.Tag = "50";
-            this.stepToolStripMenuItem.Text = "50 step";
+            this.stepToolStripMenuItem.Text = "50 steps";
             this.stepToolStripMenuItem.Click += new System.EventHandler(this.runStep5ToolStripMenuItem_Click);
             // 
             // stepToolStripMenuItem1
             // 
             this.stepToolStripMenuItem1.Name = "stepToolStripMenuItem1";
-            this.stepToolStripMenuItem1.Size = new System.Drawing.Size(126, 22);
+            this.stepToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
             this.stepToolStripMenuItem1.Tag = "100";
-            this.stepToolStripMenuItem1.Text = "100 step";
+            this.stepToolStripMenuItem1.Text = "100 steps";
             this.stepToolStripMenuItem1.Click += new System.EventHandler(this.runStep5ToolStripMenuItem_Click);
             // 
             // stepToolStripMenuItem2
             // 
             this.stepToolStripMenuItem2.Name = "stepToolStripMenuItem2";
-            this.stepToolStripMenuItem2.Size = new System.Drawing.Size(126, 22);
+            this.stepToolStripMenuItem2.Size = new System.Drawing.Size(180, 22);
             this.stepToolStripMenuItem2.Tag = "200";
-            this.stepToolStripMenuItem2.Text = "200 step";
+            this.stepToolStripMenuItem2.Text = "200 steps";
             this.stepToolStripMenuItem2.Click += new System.EventHandler(this.runStep5ToolStripMenuItem_Click);
             // 
             // untilEndToolStripMenuItem
@@ -638,11 +690,11 @@
             this.panel8.Size = new System.Drawing.Size(276, 142);
             this.panel8.TabIndex = 1;
             // 
-            // treeViewOptimaNet
+            // treeviewCurNet
             // 
             this.treeviewCurNet.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeviewCurNet.Location = new System.Drawing.Point(0, 0);
-            this.treeviewCurNet.Name = "treeViewOptimaNet";
+            this.treeviewCurNet.Name = "treeviewCurNet";
             this.treeviewCurNet.Size = new System.Drawing.Size(276, 142);
             this.treeviewCurNet.TabIndex = 0;
             // 
@@ -837,6 +889,7 @@
             // 
             // pnlMaze
             // 
+            this.pnlMaze.Controls.Add(this.pictureBoxMaze);
             this.pnlMaze.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlMaze.Location = new System.Drawing.Point(0, 0);
             this.pnlMaze.Name = "pnlMaze";
@@ -889,38 +942,38 @@
             // 
             this.dataGridView.AllowUserToAddRows = false;
             this.dataGridView.AllowUserToDeleteRows = false;
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle16.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle16.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle16.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle16.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle16.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle16.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle16.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle16;
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ColumnGeneration,
             this.ColumnMessage});
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle17.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle17.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle17.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle17.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle17.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle17.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle17.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView.DefaultCellStyle = dataGridViewCellStyle17;
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 0);
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.ReadOnly = true;
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle18.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle18.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle18.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle18.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle18.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle18.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle18.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle18;
             this.dataGridView.RowHeadersVisible = false;
             this.dataGridView.RowTemplate.Height = 23;
             this.dataGridView.Size = new System.Drawing.Size(1126, 356);
@@ -939,11 +992,40 @@
             this.ColumnMessage.ReadOnly = true;
             this.ColumnMessage.Width = 1000;
             // 
-            // btnTaskCompletedInds
+            // pictureBoxMaze
             // 
-            this.btnTaskCompletedInds.Name = "btnTaskCompletedInds";
-            this.btnTaskCompletedInds.Size = new System.Drawing.Size(205, 22);
-            this.btnTaskCompletedInds.Text = "Task Completed Inds";
+            this.pictureBoxMaze.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pictureBoxMaze.Location = new System.Drawing.Point(0, 0);
+            this.pictureBoxMaze.Name = "pictureBoxMaze";
+            this.pictureBoxMaze.Size = new System.Drawing.Size(1126, 356);
+            this.pictureBoxMaze.TabIndex = 0;
+            this.pictureBoxMaze.TabStop = false;
+            this.pictureBoxMaze.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxMaze_Paint);
+            this.pictureBoxMaze.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxMaze_MouseMove);
+            // 
+            // stepsToolStripMenuItem3
+            // 
+            this.stepsToolStripMenuItem3.Name = "stepsToolStripMenuItem3";
+            this.stepsToolStripMenuItem3.Size = new System.Drawing.Size(180, 22);
+            this.stepsToolStripMenuItem3.Tag = "500";
+            this.stepsToolStripMenuItem3.Text = "500 steps";
+            this.stepsToolStripMenuItem3.Click += new System.EventHandler(this.runStep5ToolStripMenuItem_Click);
+            // 
+            // stepsToolStripMenuItem4
+            // 
+            this.stepsToolStripMenuItem4.Name = "stepsToolStripMenuItem4";
+            this.stepsToolStripMenuItem4.Size = new System.Drawing.Size(180, 22);
+            this.stepsToolStripMenuItem4.Tag = "800";
+            this.stepsToolStripMenuItem4.Text = "800 steps";
+            this.stepsToolStripMenuItem4.Click += new System.EventHandler(this.runStep5ToolStripMenuItem_Click);
+            // 
+            // stepsToolStripMenuItem5
+            // 
+            this.stepsToolStripMenuItem5.Name = "stepsToolStripMenuItem5";
+            this.stepsToolStripMenuItem5.Size = new System.Drawing.Size(180, 22);
+            this.stepsToolStripMenuItem5.Tag = "300";
+            this.stepsToolStripMenuItem5.Text = "300 steps";
+            this.stepsToolStripMenuItem5.Click += new System.EventHandler(this.runStep5ToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -985,11 +1067,13 @@
             this.tabPage7.ResumeLayout(false);
             this.panel9.ResumeLayout(false);
             this.panel9.PerformLayout();
+            this.pnlMaze.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
             this.tabPage5.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxMaze)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1078,6 +1162,14 @@
         private System.Windows.Forms.CheckBox cbVisible;
         private System.Windows.Forms.ToolStripLabel toolStripLabel2;
         private System.Windows.Forms.ToolStripMenuItem btnTaskCompletedInds;
+        private System.Windows.Forms.ToolStripMenuItem btnDemoSimple;
+        private System.Windows.Forms.ToolStripMenuItem btnDemoReability;
+        private System.Windows.Forms.ToolStripMenuItem btnDemoFull;
+        private System.Windows.Forms.ToolStripMenuItem btnDemoCustom;
+        private System.Windows.Forms.PictureBox pictureBoxMaze;
+        private System.Windows.Forms.ToolStripMenuItem stepsToolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem stepsToolStripMenuItem4;
+        private System.Windows.Forms.ToolStripMenuItem stepsToolStripMenuItem5;
     }
 }
 

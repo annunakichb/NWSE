@@ -314,6 +314,11 @@ namespace NWSEExperiment
         
         public void panel_Paint(object sender, PaintEventArgs e)
         {
+            
+        }
+
+        private void pictureBoxMaze_Paint(object sender, PaintEventArgs e)
+        {
             //画迷宫
             if (evolutionMaze == null) return;
             evolutionMaze.draw(e.Graphics, evolutionFrame);
@@ -327,8 +332,7 @@ namespace NWSEExperiment
             }
         }
 
-
-        private void panel_MouseMove(object sender, MouseEventArgs e)
+        private void pictureBoxMaze_MouseMove(object sender, MouseEventArgs e)
         {
             if (MeasureTools.Position == null) return;
             if (evolutionMaze == null) return;
@@ -340,6 +344,12 @@ namespace NWSEExperiment
                 this.statusXY.Text = String.Format("X={0:000.00},Y={1:000.00}", mazeX, mazeY);
             else
                 this.statusXY.Text = String.Format("X={0:000.00},Y={1:000.00},pos={2:0.0000},grid=[{3},{4}]", mazeX, mazeY, poscode, gridx, gridy);
+        }
+
+
+        private void panel_MouseMove(object sender, MouseEventArgs e)
+        {
+            
         }
         #endregion
 
@@ -375,8 +385,9 @@ namespace NWSEExperiment
             if(demoNet == null)
             {
                 //demoNet = new Network(genomeFactory.createDemoGenome(evolutionSession)); 
-                //demoNet = new Network(genomeFactory.createAccuracyLowLimitTestGenome(evolutionSession));
-                demoNet = new Network(genomeFactory.createAccuracyHighLimitTestGenome(evolutionSession));
+                demoNet = new Network(genomeFactory.createAccuracyLowLimitTestGenome2(evolutionSession));
+                //demoNet = new Network(genomeFactory.createAccuracyHighLimitTestGenome(evolutionSession));
+                refreshNetwork(demoNet, treeViewOpenedNetwork);
             }
             interactiveMode = true;
             interactive_time = 0;
@@ -414,6 +425,9 @@ namespace NWSEExperiment
 
             interactive_time += 1;
             inferencing = true;
+
+            refreshNetwork(demoNet, treeViewOpenedNetwork);
+
             this.Refresh();
 
 
@@ -447,10 +461,36 @@ namespace NWSEExperiment
 
         private void btnOpenDemoAgent_Click(object sender, EventArgs e)
         {
+            
+        }
+
+        private void btnDemoSimple_Click(object sender, EventArgs e)
+        {
             interactiveMode = true;
             initInteraction();
-            demoNet = new Network(genomeFactory.createDemoGenome(evolutionSession));
+            demoNet = new Network(genomeFactory.createReabilityGenome(evolutionSession));
             this.refreshNetwork(demoNet, treeViewOpenedNetwork);
+        }
+
+        private void btnDemoReability_Click(object sender, EventArgs e)
+        {
+            interactiveMode = true;
+            initInteraction();
+            demoNet = new Network(genomeFactory.createReabilityGenome(evolutionSession));
+            this.refreshNetwork(demoNet, treeViewOpenedNetwork);
+        }
+
+        private void btnDemoFull_Click(object sender, EventArgs e)
+        {
+            interactiveMode = true;
+            initInteraction();
+            demoNet = new Network(genomeFactory.createDemoGenome2(evolutionSession));
+            this.refreshNetwork(demoNet, treeViewOpenedNetwork);
+        }
+
+        private void btnDemoCustom_Click(object sender, EventArgs e)
+        {
+
         }
 
         private void btnOpenFromFile_Click(object sender, EventArgs e)
@@ -586,6 +626,9 @@ namespace NWSEExperiment
             this.Refresh();
 
         }
+
+
+
 
 
 

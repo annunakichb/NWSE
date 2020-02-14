@@ -48,14 +48,18 @@ namespace NWSELib.net
         /// <summary>
         /// 执行这个动作的预期评估值
         /// </summary>
-        internal double evluation;
+        public double evluation;
+
+        /// <summary>
+        /// 预期结果依据的推理项
+        /// </summary>
+        public List<InferenceRecord> inferencesItems = new List<InferenceRecord>();
 
         /// <summary>
         /// 所有可能动作的评估记录
         /// </summary>
-        public List<(List<double>, double, List<Vector>)> actionEvaulationRecords = new List<(List<double>, double, List<Vector>)>();
+        public List<(List<double> actions, double evulation)> actionEvaulationRecords = new List<(List<double>, double)>();
         
-
         /// <summary>
         /// 预期得到的观察数据
         /// </summary>
@@ -82,10 +86,8 @@ namespace NWSELib.net
             }
         }
 
-        /// <summary>
-        /// 预期结果依据的推理项
-        /// </summary>
-        public List<(Inference,InferenceRecord)> inferencesItems = new List<(Inference, InferenceRecord)>();
+        
+        
         
 
         public string print()
@@ -98,8 +100,8 @@ namespace NWSELib.net
             str.Append("    inferences=" + System.Environment.NewLine);
             for(int i=0;i< inferencesItems.Count;i++)
             {
-                (Inference inf, InferenceRecord record) = inferencesItems[i];
-                str.Append("    " + (i + 1).ToString() + ". " + inf.getGene().Text);
+                InferenceRecord record = inferencesItems[i];
+                str.Append("    " + (i + 1).ToString() + ". " + record.inf.getGene().Text);
                 str.Append("        " + record.ToString());
             }
             return str.ToString();
