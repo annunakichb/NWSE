@@ -126,6 +126,11 @@ namespace NWSELib.net
             return this.means.toString();
         }
 
+        public String summary()
+        {
+            return this.means.toString() + ",e=" + evulation.ToString("F4")+",accept="+acceptCount.ToString();
+        }
+
         #endregion
 
         #region 均值处理

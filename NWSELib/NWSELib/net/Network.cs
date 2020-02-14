@@ -418,7 +418,9 @@ namespace NWSELib.net
             eplison = time == 0 ? 1.0 : 1  - time/100.0;
             if (rng.NextDouble() <= eplison)
             {
-                plan = createDefaultPlan(time);
+                if (reward >= 0)
+                    plan = this.createNormalPlan(time);
+                else plan = createDefaultPlan(time);
             }
             else 
             {
@@ -441,6 +443,18 @@ namespace NWSELib.net
         }
 
         #region 回忆和推理
+        public ActionPlan createNormalPlan(int time)
+        {
+            ActionPlan plan = new ActionPlan();
+            plan.actions = new double[] { 0.5 }.ToList();
+            plan.judgeTime = time;
+            plan.judgeType = ActionPlan.JUDGE_DEFAULT;
+            plan.mode = "奖励非负，维持动作";
+            int index = 0;
+            plan.inputObs = this.Receptors.ConvertAll(r => r.Gene.IsActionSensor() ? new Vector(plan.actions[index++]) : r.Value);
+            return plan;
+
+        }
         public ActionPlan createDefaultPlan(int time)
         {
             ActionPlan plan = new ActionPlan();
@@ -465,12 +479,34 @@ namespace NWSELib.net
             if (lastActionPlan == null) return "";
             StringBuilder str = new StringBuilder();
             str.Append("行动方式="+ lastActionPlan.judgeType + System.Environment.NewLine);
-            str.Append("   推理准则="+ lastActionPlan.mode + System.Environment.NewLine);
-            str.Append("   评估值=" + lastActionPlan.evluation.ToString("F3") + System.Environment.NewLine);
-            str.Append("   行为=");
+            str.Append("推理准则="+ lastActionPlan.mode + System.Environment.NewLine);
+            str.Append("评估值=" + lastActionPlan.evluation.ToString("F3") + System.Environment.NewLine);
+            str.Append("行为=");
             str.Append(showActionText() + System.Environment.NewLine);
-
             str.Append(System.Environment.NewLine);
+
+            if(this.lastActionPlan.inferencesItems ==null || this.lastActionPlan.inferencesItems.Count<=0)
+                return str.ToString();
+
+
+            Dictionary<String, String> strs = new Dictionary<string, string>();
+            foreach(InferenceRecord r in this.lastActionPlan.inferencesItems)
+            {
+                String infs = r.inf.summary();
+                if(!strs.ContainsKey(infs))
+                {
+                    strs.Add(infs," "+r.summary()+System.Environment.NewLine);
+                }else
+                {
+                    strs[infs] = "  " + r.summary() + System.Environment.NewLine;
+                }
+            }
+
+            foreach(KeyValuePair<String,String> kv in strs)
+            {
+                str.Append(kv.Key + System.Environment.NewLine);
+                str.Append(kv.Value);
+            }
             return str.ToString();
         }
         public String showActionText()
@@ -711,6 +747,8 @@ namespace NWSELib.net
             if (actionPlanTraces.Count <= 0) return;
             for (int i = actionPlanTraces.Count - 1; i >= 0; i--)
             {
+                
+                //double r = reward / (actionPlanTraces.Count-i);
                 double r = Math.Exp(i - this.actionPlanTraces.Count + 1) * reward;
                 if (actionPlanTraces[i].inferencesItems.Count > 0)
                 {
@@ -725,6 +763,7 @@ namespace NWSELib.net
                 }
                 if (reward == Session.GetConfiguration().evaluation.reward.away)
                     return;
+                
 
             }
             if (reward == Session.GetConfiguration().evaluation.reward.collision)
@@ -741,9 +780,9 @@ namespace NWSELib.net
             this.Handlers.ForEach(h => h.think(this, time, null));
 
             List<InferenceRecord> temp = new List<InferenceRecord>();
-            for (int j = 0; j < this.imagination.inferences.Count; j++)
+            for (int j = 0; j < this.Inferences.Count; j++)
             {
-                Inference inf = this.imagination.inferences[j];
+                Inference inf = this.Inferences[j];
                 //if (!inf.getGene().hasEnvDenpend()) continue; //根外界环境无关的不做评估
                 List<(InferenceRecord, double)> matchedRecords = inf.getMatchRecordsInThink(this, time);
                 if (matchedRecords == null || matchedRecords.Count <= 0) continue;

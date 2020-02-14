@@ -84,6 +84,10 @@ namespace NWSELib.net
             variablesReceptors = this.getGene().getVariableIds().ConvertAll(id => (Receptor)net[id]);
         }
         
+        public String summary()
+        {
+            return this.getGene().Text + ",r=" + this.Reability.ToString("F4");
+        }
         public override string ToString()
         {
             StringBuilder str = new StringBuilder();

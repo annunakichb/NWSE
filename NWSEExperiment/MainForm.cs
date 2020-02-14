@@ -421,7 +421,7 @@ namespace NWSEExperiment
             inputs.AddRange(gesture);
             actions = this.demoNet.activate(inputs, interactive_time,evolutionSession,reward);
             //显示推理链
-            this.txtMsg.Text += this.demoNet.showActionPlan();
+            this.txtPolicy.Text = this.demoNet.showActionPlan();
 
             interactive_time += 1;
             inferencing = true;

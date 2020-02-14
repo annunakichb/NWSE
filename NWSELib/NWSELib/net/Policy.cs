@@ -12,6 +12,11 @@ namespace NWSELib.net
     public class Policy
     {
         public Network net;
+
+        public Policy(Network net)
+        {
+            this.net = net;
+        }
         /// <summary>
         /// 制订行动计划
         /// </summary>
@@ -30,7 +35,7 @@ namespace NWSELib.net
                 List<InferenceRecord> rs = inf.getMatchRecordExcludeAction(condValues,true);
                 if (rs.Count <= 0) continue;
                 List<double> rsEvas = rs.ConvertAll(rt => rt.evulation);
-                InferenceRecord record = rs[rsEvas.argmin()];
+                InferenceRecord record = rs[rsEvas.argmax()];
                 records.Add(record);
             }
             if (records.Count <= 0) return null;
@@ -91,6 +96,7 @@ namespace NWSELib.net
         {
             if (items == null || items.Count <= 0) return 0;
             List<double> evas = items.ConvertAll(item => item.infRecords.ConvertAll(r => r.evulation).Sum());
+            if (evas.Count == 1) return evas[0];
             if (evas.Count % 2 == 0)
                 return (evas[evas.Count / 2 - 1] + evas[evas.Count / 2]) / 2;
             else
@@ -160,6 +166,7 @@ namespace NWSELib.net
             Vector instinct = new Vector(instinctActions.ToArray());
 
             List<double> dis = items.ConvertAll(item=>instinct.distance(item.actions));
+            if (dis.Min() >= 0.25) return (null, null);
             return items[dis.argmin()];
         }
         /// <summary>

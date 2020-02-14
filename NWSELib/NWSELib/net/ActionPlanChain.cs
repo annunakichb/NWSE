@@ -18,6 +18,7 @@ namespace NWSELib.net
         public const String JUDGE_RANDOM = "随机行动";
         public const String JUDGE_INSTINCT = "本能行动";
         public const String JUDGE_INFERENCE = "推理行动";
+        public const String JUDGE_DEFAULT = "维持行动";
         internal static readonly String MODE_EXPLOITATION = "利用优先";
         internal static readonly String MODE_INSTINCT = "本能优先";
         internal static readonly String MODE_EXPLORATION = "探索优先";
@@ -97,7 +98,8 @@ namespace NWSELib.net
             int t = 0;
             plan.inputObs = net.Receptors.ConvertAll(r => r.getGene().IsActionSensor() ? new Vector(action[t++]) : r.Value);
             plan.judgeTime = time;
-            plan.judgeType = reason;
+            plan.judgeType = JUDGE_INSTINCT;
+            plan.mode = reason;
             return plan;
 
         }
