@@ -164,15 +164,17 @@ namespace NWSELib.net
 
         #region 缓存和初始化
 
-        public readonly List<Receptor> receptors;
+        public readonly List<Receptor> LeafReceptors;
 
         
         public Node(NodeGene gene,Network net)
         {
             this.gene = gene;
             this.net = net;
-            receptors = this.gene.getLeafGenes().ConvertAll(g => (Receptor)net[g.Id]);
+            LeafReceptors = this.gene.getLeafGenes().ConvertAll(g => (Receptor)net[g.Id]);
         }
+
+        
         #endregion
 
         #region 评价信息
@@ -220,26 +222,7 @@ namespace NWSELib.net
         {
             return this.times.Contains(time);
         }
-
-        internal double randomValue(Network net,int time)
-        {
-            double[] values = { 0, 0.0625, 0.125, 0.1875, 0.25, 0.3125, 0.375, 0.4375, 0.5, 0.5625, 0.625, 0.6875, 0.75, 0.8125, 0.875, 0.9375, 1.0 };
-            int index = Network.rng.Next(0, values.Length);
-            this.activate(net, time, values[index]);
-            return values[index];
-            /*
-
-
-            double value = Session.GetConfiguration().agent.receptors.GetSensor("_"+this.Name).Range.gaussian_random();
-
-            List<double> dis = values.ToList().ConvertAll(v => Math.Abs(v - value));
-            int index = dis.argmin();
-            value = values[index];
-
-            this.activate(net, time, value);
-            return value;
-            */
-        }
+        
         #endregion
 
         #region 想象信息（用于推理）

@@ -332,7 +332,33 @@ namespace NWSELib
 
             [XmlElement]
             public EvaluationReward reward = new EvaluationReward();
+            [XmlElement]
+            public EvaluationPolicy policy = new EvaluationPolicy();
 
+        }
+
+        public class EvaluationPolicy
+        {
+            [XmlAttribute]
+            public int init_plan_depth = 5;
+            [XmlAttribute]
+            public String plan_reward_range = "[-50,-50]";
+            [XmlAttribute]
+            public bool exploration;
+           
+            [XmlIgnore]
+            private ValueRange _plan_reward_range;
+            [XmlIgnore]
+            public ValueRange PlanRewardRange
+            {
+                get
+                {
+                    if(_plan_reward_range == null)
+                        _plan_reward_range = new ValueRange(plan_reward_range);
+                    return _plan_reward_range;
+                }
+            }
+           
         }
 
         public class EvaluationReward

@@ -44,7 +44,7 @@ namespace NWSELib.net
                 return originValue;
 
 
-            int sectionCount = getGene().AbstractSectionCount;
+            int sectionCount = getGene().SampleCount;
             if (sectionCount <= 0) return originValue;
 
             return MeasureTools.GetMeasure(this.Cataory).getRankedValue(originValue, this.getGene().AbstractLevel, sectionCount);
@@ -71,7 +71,7 @@ namespace NWSELib.net
 
             List<String> names = this.getGene().AbstractLevelNames;
             if (names == null) return value.ToString();
-            int sectionCount = this.getGene().AbstractSectionCount;
+            int sectionCount = this.getGene().SampleCount;
             int rankIndex = MeasureTools.GetMeasure(this.Cataory).getRankedIndex(value, this.getGene().AbstractLevel, sectionCount);
             return value[0].ToString("F4")+"("+ names[rankIndex] + ")";
         }
@@ -127,6 +127,52 @@ namespace NWSELib.net
             MeasureTools measure =
                 MeasureTools.GetMeasure(Gene.Cataory);
             return measure.distance(v1, v2);
+        }
+
+        public bool IsTolerateDistance(double distance)
+        {
+           return MeasureTools.GetMeasure(Gene.Cataory).tolerate >= distance;
+        }
+
+        private double[] _cached_sample_values = null;
+        public double[] GetSampleValues()
+        {
+            if (getGene().AbstractLevel <= 0) return null;
+            if (_cached_sample_values != null) return _cached_sample_values;
+            int count = getGene().SampleCount;
+            double unit = getGene().LevelUnitDistance;
+            double[] values = new double[count];
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] = i * unit;
+                if (i == values.Length - 1) values[i] = 1.0;
+
+            }
+            return _cached_sample_values = values;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="randomType">uniform，gaussian，maintain</param>
+        /// <returns></returns>
+        internal double randomValue(String randomType = "uniform")
+        {
+            double value = 0;
+            if (randomType == "gaussian")
+                value = Session.GetConfiguration().agent.receptors.GetSensor("_" + this.Name).Range.gaussian_random();
+            else if (randomType == "uniform")
+            {
+                double[] values = this.GetSampleValues();
+                if (values == null || values.Length <= 0)
+                    return Network.rng.NextDouble();
+                return values[Network.rng.Next(0, values.Length)];
+            }
+
+            return Network.rng.NextDouble();
+
+
+
+            
         }
         #endregion
     }

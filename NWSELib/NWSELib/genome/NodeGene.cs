@@ -116,18 +116,21 @@ namespace NWSELib.genome
             }
             return upstreams;
         }
+
+        private List<ReceptorGene> _cachedLeafGenes = null;
         /// <summary>
         /// 取得基因树上的叶子基因
         /// </summary>
         /// <returns></returns>
         public virtual List<ReceptorGene> getLeafGenes()
         {
+            if (_cachedLeafGenes != null) return _cachedLeafGenes;
             List<ReceptorGene> r = new List<ReceptorGene>();
             if (this is ReceptorGene)
             {
                 r.Add((ReceptorGene)this);return r;
             }
-            return this.getLeafGenes(this, r);
+            return _cachedLeafGenes = this.getLeafGenes(this, r);
         }
         private List<ReceptorGene> getLeafGenes(NodeGene g,List<ReceptorGene> r)
         {

@@ -33,22 +33,27 @@ namespace NWSELib.genome
             NWSEGenome genome = new NWSEGenome();
             //生成感受器
             this.createReceptors(genome, session);
+
+
             //生成缺省推理节点
-            InferenceGene inferenceGene = new InferenceGene(genome);
-            inferenceGene.Generation = session.Generation;
-            inferenceGene.conditions = new List<(int, int)>();
-            inferenceGene.variables = new List<(int, int)>();
-            inferenceGene.conditions.Add((genome["d1"].Id, 1));
-            inferenceGene.conditions.Add((genome["d2"].Id, 1));
-            inferenceGene.conditions.Add((genome["d3"].Id, 1));
-            inferenceGene.conditions.Add((genome["d4"].Id, 1));
-            inferenceGene.conditions.Add((genome["d5"].Id, 1));
-            inferenceGene.conditions.Add((genome["d6"].Id, 1));
-            inferenceGene.conditions.Add((genome["_a2"].Id, 1));
-            inferenceGene.variables.Add((genome["d3"].Id, 0));
-            inferenceGene.sort_dimension();
-            inferenceGene.Id = Session.idGenerator.getGeneId(inferenceGene);
-            genome.infrernceGenes.Add(inferenceGene);
+            int[] varids = { genome["d1"].Id, genome["d2"].Id, 
+                             genome["d3"].Id, genome["d4"].Id,
+                             genome["d5"].Id, genome["d6"].Id,
+                             genome["g1"].Id, genome["gd"].Id,
+                             genome["b"].Id,genome["heading"].Id,
+                             genome["_a2"].Id};
+            for (int i = 0; i < varids.Length; i++)
+            {
+                InferenceGene inferenceGene = new InferenceGene(genome);
+                inferenceGene.Generation = session.Generation;
+                inferenceGene.conditions = new List<(int, int)>();
+                inferenceGene.variables = new List<(int, int)>();
+                inferenceGene.conditions.Add((genome["_a2"].Id, 1));
+                inferenceGene.variables.Add((varids[i], 0));
+                inferenceGene.sort_dimension();
+                inferenceGene.Id = Session.idGenerator.getGeneId(inferenceGene);
+                genome.infrernceGenes.Add(inferenceGene);
+            }
 
             genome.id = Session.idGenerator.getGenomeId();
             genome.computeNodeDepth();
@@ -67,15 +72,9 @@ namespace NWSELib.genome
 
             inferenceGene.conditions = new List<(int, int)>();
             inferenceGene.variables = new List<(int, int)>();
-            inferenceGene.conditions.Add((genome["d1"].Id, 1));
-            inferenceGene.conditions.Add((genome["d2"].Id, 1));
-            inferenceGene.conditions.Add((genome["d3"].Id, 1));
-            inferenceGene.conditions.Add((genome["d4"].Id, 1));
-            inferenceGene.conditions.Add((genome["d5"].Id, 1));
-            inferenceGene.conditions.Add((genome["d6"].Id, 1));
+            inferenceGene.conditions.Add((genome["heading"].Id, 1));
             inferenceGene.conditions.Add((genome["_a2"].Id, 1));
-
-            inferenceGene.variables.Add((genome["d3"].Id, 0));
+            inferenceGene.variables.Add((genome["heading"].Id, 0));
             inferenceGene.sort_dimension();
             inferenceGene.Id = Session.idGenerator.getGeneId(inferenceGene);
             genome.infrernceGenes.Add(inferenceGene);
@@ -109,7 +108,8 @@ namespace NWSELib.genome
             inferenceGene.Generation = session.Generation;
             inferenceGene.conditions = new List<(int, int)>();
             inferenceGene.variables = new List<(int, int)>();
-            inferenceGene.conditions.Add((genome["pos"].Id, 1));
+            inferenceGene.conditions.Add((genome["g1"].Id, 1));
+            inferenceGene.conditions.Add((genome["gd"].Id, 1));
             inferenceGene.conditions.Add((genome["heading"].Id, 1));
             inferenceGene.conditions.Add((genome["_a2"].Id, 1));
             inferenceGene.variables.Add((genome["b"].Id, 0));
@@ -117,18 +117,9 @@ namespace NWSELib.genome
             inferenceGene.Id = Session.idGenerator.getGeneId(inferenceGene);
             genome.infrernceGenes.Add(inferenceGene);
 
-            //生成推理节点:3 
-            inferenceGene = new InferenceGene(genome);
-            inferenceGene.Generation = session.Generation;
-            inferenceGene.conditions = new List<(int, int)>();
-            inferenceGene.variables = new List<(int, int)>();
-            inferenceGene.conditions.Add((genome["pos"].Id, 1));
-            inferenceGene.conditions.Add((genome["heading"].Id, 1));
-            inferenceGene.conditions.Add((genome["_a2"].Id, 1));
-            inferenceGene.variables.Add((genome["pos"].Id, 0));
-            inferenceGene.sort_dimension();
-            inferenceGene.Id = Session.idGenerator.getGeneId(inferenceGene);
-            genome.infrernceGenes.Add(inferenceGene);
+            
+
+            
 
             //生成推理节点:4
             int[] ids = new int[] { genome["d1"].Id, genome["d2"].Id,
@@ -140,7 +131,8 @@ namespace NWSELib.genome
                 inferenceGene.Generation = session.Generation;
                 inferenceGene.conditions = new List<(int, int)>();
                 inferenceGene.variables = new List<(int, int)>();
-                inferenceGene.conditions.Add((genome["pos"].Id, 1));
+                inferenceGene.conditions.Add((genome["g1"].Id, 1));
+                inferenceGene.conditions.Add((genome["gd"].Id, 1));
                 inferenceGene.conditions.Add((genome["heading"].Id, 1));
                 inferenceGene.conditions.Add((genome["_a2"].Id, 1));
                 inferenceGene.variables.Add((did, 0));
@@ -150,16 +142,15 @@ namespace NWSELib.genome
             }
 
             //生成推理节点:4
-            ids = new int[] { genome["g1"].Id, genome["g2"].Id,
-                              genome["g3"].Id, genome["g4"].Id
-                            };
+            ids = new int[] { genome["g1"].Id, genome["gd"].Id};
             foreach (int did in ids)
             {
                 inferenceGene = new InferenceGene(genome);
                 inferenceGene.Generation = session.Generation;
                 inferenceGene.conditions = new List<(int, int)>();
                 inferenceGene.variables = new List<(int, int)>();
-                inferenceGene.conditions.Add((genome["pos"].Id, 1));
+                inferenceGene.conditions.Add((genome["g1"].Id, 1));
+                inferenceGene.conditions.Add((genome["gd"].Id, 1));
                 inferenceGene.conditions.Add((genome["heading"].Id, 1));
                 inferenceGene.conditions.Add((genome["_a2"].Id, 1));
                 inferenceGene.variables.Add((did, 0));
@@ -186,21 +177,18 @@ namespace NWSELib.genome
             conditions.Add((genome["d5"].Id, 1));
             conditions.Add((genome["d6"].Id, 1));
             conditions.Add((genome["g1"].Id, 1));
-            conditions.Add((genome["g2"].Id, 1));
-            conditions.Add((genome["g3"].Id, 1));
-            conditions.Add((genome["g4"].Id, 1));
+            conditions.Add((genome["gd"].Id, 1));
             conditions.Add((genome["b"].Id, 1));
-            conditions.Add((genome["pos"].Id, 1));
             conditions.Add((genome["heading"].Id, 1));
             conditions.Add((genome["_a2"].Id, 1));
 
             int[] varIds = { genome["d1"].Id, genome["d2"].Id,
                              genome["d3"].Id, genome["d4"].Id,
                              genome["d5"].Id, genome["d6"].Id,
-                             genome["g1"].Id, genome["g2"].Id,
+                             genome["g1"].Id, genome["gd"].Id,
                              genome["g3"].Id, genome["g4"].Id,
-                             genome["b"].Id,genome["pos"].Id,
-                             genome["heading"].Id
+                             genome["b"].Id,genome["heading"].Id
+
             };
             InferenceGene inferenceGene = null;
             //生成推理节点
@@ -242,11 +230,9 @@ namespace NWSELib.genome
             inferenceGene.conditions.Add((genome["d5"].Id, 1));
             inferenceGene.conditions.Add((genome["d6"].Id, 1));
             inferenceGene.conditions.Add((genome["g1"].Id, 1));
-            inferenceGene.conditions.Add((genome["g2"].Id, 1));
-            inferenceGene.conditions.Add((genome["g3"].Id, 1));
-            inferenceGene.conditions.Add((genome["g4"].Id, 1));
+            inferenceGene.conditions.Add((genome["gd"].Id, 1));
             inferenceGene.conditions.Add((genome["b"].Id, 1));
-            inferenceGene.conditions.Add((genome["pos"].Id, 1));
+
 
             inferenceGene.variables.Add((genome["d1"].Id, 0));
             inferenceGene.sort_dimension();
@@ -270,7 +256,7 @@ namespace NWSELib.genome
             inferenceGene.conditions = new List<(int, int)>();
             inferenceGene.variables = new List<(int, int)>();
             inferenceGene.conditions.Add((genome["heading"].Id, 1));
-            inferenceGene.variables.Add((genome["pos"].Id, 0));
+            inferenceGene.variables.Add((genome["g1"].Id, 0));
             inferenceGene.sort_dimension();
             inferenceGene.Id = Session.idGenerator.getGeneId(inferenceGene);
             genome.infrernceGenes.Add(inferenceGene);

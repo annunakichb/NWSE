@@ -372,7 +372,7 @@ namespace NWSELib.net
         public double adjustAccuracy(int time)
         {
             //取得inf的真实条件值和后置变量值
-            (List<Vector> realCondValues, List<Vector> realVarValues) = inf.getValues2(inf.net, time);
+            (List<Vector> realCondValues, List<Vector> realVarValues) = inf.getValues2(time);
             //判断条件部分是否匹配
             double dc = 0;
             bool match = this.isConditionValueMatch(realCondValues, out dc);
@@ -460,9 +460,9 @@ namespace NWSELib.net
             Vector v2 = this.means.flatten().Item1;
 
             List<double> distances = new List<double>();
-            for (int i = 0; i < this.inf.receptors.Count; i++)
+            for (int i = 0; i < this.inf.LeafReceptors.Count; i++)
             {
-                double d = this.inf.receptors[i].distance(v1[i], v2[i]);
+                double d = this.inf.LeafReceptors[i].distance(v1[i], v2[i]);
                 distances.Add(d);
             }
             return distances;

@@ -395,20 +395,23 @@ namespace NWSEExperiment
             demoAgent = evolutionMaze.Agents[0];
             demoAgent.Visible = true;
 
-            (int ptx, int pty) = MeasureTools.Position.poscodeSplit(obs[11]);
             this.txtMsg.Text = "第" + interactive_time.ToString() + "次交互" + System.Environment.NewLine;
-            this.txtMsg.Text += "障碍=" + Utility.toString(obs.GetRange(0, 6)) + System.Environment.NewLine; ;
-            this.txtMsg.Text += "位置=" + obs[11].ToString("F4") + "(" + ptx.ToString() + "," + pty.ToString() + ")" + System.Environment.NewLine;
-            this.txtMsg.Text += "目标=" + Utility.toString(obs.GetRange(6, 4)) + System.Environment.NewLine; ;
-            this.txtMsg.Text += "朝向=" + MeasureTools.Direction.headingToDegree(gesture[0]).ToString("F2") +"("+ gesture[0].ToString("F2")+")"+ System.Environment.NewLine;
-            this.txtMsg.Text += "到达=" + end.ToString() + System.Environment.NewLine;
-            this.txtMsg.Text += System.Environment.NewLine;
+            this.txtMsg.Text += observationToString(obs, gesture,0,false);
             inferencing = false;
             this.Refresh();
             
         }
         
-
+        private String observationToString(List<double> obs,List<double> gestures,double reward,bool end)
+        {
+            return "位置=" + "(" + demoAgent.Location.X.ToString("F0") + "," + demoAgent.Location.Y.ToString("F0") + ")" + System.Environment.NewLine +
+            "障碍=" + Utility.toString(obs.GetRange(0, 6)) + System.Environment.NewLine + 
+            "目标朝向=" + obs[6].ToString() + System.Environment.NewLine +
+            "目标距离=" + obs[7].ToString() + System.Environment.NewLine +
+            "朝向=" + MeasureTools.Direction.headingToDegree(gesture[0]).ToString("F2") + "(" + gesture[0].ToString("F2") + ")" + System.Environment.NewLine +
+            "奖励=" + reward.ToString("F4") + System.Environment.NewLine +
+            "到达=" + end.ToString() + System.Environment.NewLine;
+        }
         /// <summary>
         /// 推理
         /// </summary>
@@ -421,7 +424,7 @@ namespace NWSEExperiment
             inputs.AddRange(gesture);
             actions = this.demoNet.activate(inputs, interactive_time,evolutionSession,reward);
             //显示推理链
-            this.txtPolicy.Text = this.demoNet.showActionPlan();
+            this.txtPolicy.Text = this.demoNet.actionPlanChain.ToString();
 
             interactive_time += 1;
             inferencing = true;
@@ -442,16 +445,9 @@ namespace NWSEExperiment
         {
             (obs,gesture,actions,reward,end) = ((IEnv)this.evolutionMaze).action(this.demoNet,
                 this.demoNet.Effectors.ConvertAll(x => x.Value[0]));
-            (int ptx, int pty) = MeasureTools.Position.poscodeSplit(obs[11]);
-
+            
             this.txtMsg.Text += "第" + interactive_time.ToString() + "次交互" + System.Environment.NewLine;
-            this.txtMsg.Text += "障碍=" + Utility.toString(obs.GetRange(0, 6)) + System.Environment.NewLine; ;
-            this.txtMsg.Text += "目标=" + Utility.toString(obs.GetRange(6, 4)) + System.Environment.NewLine; ;
-            this.txtMsg.Text += "位置=" + obs[11].ToString("F4")+"("+ ptx.ToString()+","+pty.ToString()+")"+System.Environment.NewLine;
-            this.txtMsg.Text += "朝向=" + MeasureTools.Direction.headingToDegree(gesture[0]).ToString("F2") + "(" + gesture[0].ToString("F2") + ")" + System.Environment.NewLine;
-            this.txtMsg.Text += "奖励=" + this.reward+ System.Environment.NewLine;
-            this.txtMsg.Text += "碰撞=" + this.demoAgent.PrevCollided.ToString() + "->" + demoAgent.HasCollided.ToString();
-            this.txtMsg.Text += System.Environment.NewLine;
+            this.txtMsg.Text += observationToString(obs, gesture, reward, end);
 
             //this.optima_net.setReward(reward, interactive_time);
             inferencing = false;
@@ -609,7 +605,7 @@ namespace NWSEExperiment
             this.txtMsg.Text += System.Environment.NewLine;
             this.txtMsg.Text += "#####个体结构(Level2)#####";
             //打印推理记忆节点现状
-            List<Inference> infs = this.demoNet.imagination.inferences;
+            List<Inference> infs = this.demoNet.Inferences;
             for (int i = 0; i < infs.Count; i++)
             {
                 Inference inf = (Inference)infs[i];

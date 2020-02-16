@@ -9,19 +9,81 @@ using NWSELib.common;
 
 namespace NWSELib.net
 {
-    
+    public class ActionPlanChain
+    {
+        public static readonly String MODE_EXPLOITATION = "利用优先";
+        public static readonly String MODE_INSTINCT = "本能优先";
+        public static readonly String MODE_EXPLORATION = "探索优先";
+        /// <summary>
+        /// 行动计划集
+        /// </summary>
+        private List<ActionPlan> plans = new List<ActionPlan>();
+        /// <summary>
+        /// 各种行动评估记录
+        /// </summary>
+        public List<(List<double>, double,int)> EvaulationRecords = new List<(List<double>, double,int)>();
+        /// <summary>
+        /// 第一个行动计划
+        /// </summary>
+        public ActionPlan Root { get { return plans.Count <= 0 ? null : plans[0]; } }
+        /// <summary>
+        /// 最后一个
+        /// </summary>
+        public ActionPlan Last { get { return plans.Count <= 0 ? null : plans[plans.Count-1]; } }
+        /// <summary>
+        /// 链长度
+        /// </summary>
+        public int Length { get { return plans.Count; } }
+        /// <summary>
+        /// 清空
+        /// </summary>
+        public void Clear() { this.plans.Clear(); }
+        /// <summary>
+        /// 放入下一个
+        /// </summary>
+        /// <param name="plan"></param>
+        /// <returns></returns>
+        public ActionPlan PutNext(ActionPlan plan)
+        {
+            this.plans.Add(plan);
+            return plan;
+        }
+        /// <summary>
+        /// 重新开始一个新计划
+        /// </summary>
+        /// <param name="plan"></param>
+        /// <returns></returns>
+        public ActionPlan Reset(ActionPlan plan)
+        {
+            Clear();
+            plans.Add(plan);
+            return plan;
+        }
+        /// <summary>
+        /// 所有行动计划
+        /// </summary>
+        public List<ActionPlan> ToList() {  return plans;  }
+        /// <summary>
+        /// 字符串
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            if (plans.Count <= 0) return "";
+            return plans[0].ToString() + "steps=" + this.Length.ToString() + System.Environment.NewLine;
+            
+        }
+    }
     /// <summary>
     /// 行动规划项
     /// </summary>
     public class ActionPlan
     {
+        #region 基本信息
         public const String JUDGE_RANDOM = "随机行动";
         public const String JUDGE_INSTINCT = "本能行动";
         public const String JUDGE_INFERENCE = "推理行动";
-        public const String JUDGE_DEFAULT = "维持行动";
-        internal static readonly String MODE_EXPLOITATION = "利用优先";
-        internal static readonly String MODE_INSTINCT = "本能优先";
-        internal static readonly String MODE_EXPLORATION = "探索优先";
+        public const String JUDGE_MAINTAIN = "维持行动";
 
         /// <summary>
         /// 判定产生动作的类型
@@ -30,14 +92,14 @@ namespace NWSELib.net
         /// <summary>
         /// 推理模式
         /// </summary>
-        internal String mode = "";
+        internal String reason = "";
         /// <summary>
         /// 判定发生时间
         /// </summary>
         public int judgeTime;
 
         /// <summary>
-        /// 该行动计划获得的观察数据
+        /// 该行动计划对应的观察数据
         /// </summary>
         public List<Vector> inputObs = new List<Vector>();
 
@@ -47,82 +109,113 @@ namespace NWSELib.net
         public List<double> actions;
 
         /// <summary>
-        /// 执行这个动作的预期评估值
+        /// 执行这个动作的评估结果
+        /// 当评估大于0的时候，表示走evluation步没有碰到障碍
+        /// 当评估小于0的时候，表示走abs(evluation)步碰到障碍
         /// </summary>
-        public double evluation;
+        public double evaulation = double.NaN;
 
         /// <summary>
-        /// 预期结果依据的推理项
+        /// 在制订行动方案时预测的评估值
         /// </summary>
-        public List<InferenceRecord> inferencesItems = new List<InferenceRecord>();
+        public double forcastEvaulation = double.NaN;
 
         /// <summary>
-        /// 所有可能动作的评估记录
+        /// 计划该动作维持步数
         /// </summary>
-        public List<(List<double> actions, double evulation)> actionEvaulationRecords = new List<(List<double>, double)>();
-        
-        /// <summary>
-        /// 预期得到的观察数据
-        /// </summary>
-        public List<Vector> expectNextObs;
+        public int planSteps;
 
         /// <summary>
-        /// 真实得到的观察结果
+        /// 该计划执行获得的奖励
         /// </summary>
-        public List<Vector> realObs;
+        public double reward;
 
 
-
-        /// <summary>
-        /// 行动实施以后预期得到的观察与实际得到的观察相似距离
-        /// </summary>
-        public double SimilarityDistance
+        public bool Equals(List<double> actions)
         {
-            get
+            for(int i=0;i<actions.Count;i++)
             {
-                if (realObs == null || expectNextObs == null ||
-                   realObs.Count <= 0 || expectNextObs.Count <= 0)
-                    return double.NaN;
-                return Vector.manhantan_distance(expectNextObs, realObs);    
+                if (this.actions[i] != actions[i]) return false;
             }
+            return true;
         }
-
-        public static ActionPlan create(Network net,Vector action,int time,List<InferenceRecord> infRecords,String reason)
+        public bool Equals(params double[] actions)
         {
-            if (infRecords == null || infRecords.Count <= 0) return null;
-
-            ActionPlan plan = new ActionPlan();
-            plan.actions = action.ToList();
-            plan.evluation = infRecords.ConvertAll(r => r.evulation).Sum();
-            plan.inferencesItems = infRecords;
-            int t = 0;
-            plan.inputObs = net.Receptors.ConvertAll(r => r.getGene().IsActionSensor() ? new Vector(action[t++]) : r.Value);
-            plan.judgeTime = time;
-            plan.judgeType = JUDGE_INSTINCT;
-            plan.mode = reason;
-            return plan;
-
+            for (int i = 0; i < actions.Length; i++)
+            {
+                if (this.actions[i] != actions[i]) return false;
+            }
+            return true;
         }
 
 
 
-        public string print()
+        #endregion
+
+        #region 工厂方法
+        public static ActionPlan CreateRandomPlan(Network net, int time)
+        {
+            ActionPlan plan = new ActionPlan();
+            plan.actions = net.CreateRandomActions();
+            plan.judgeTime = time;
+            plan.judgeType = ActionPlan.JUDGE_RANDOM;
+            plan.forcastEvaulation = double.NaN;
+            plan.planSteps = 1;
+            plan.reason = "";
+            plan.inputObs = net.GetSplitReceptorValues().scene;
+            return plan;
+        }
+        /// <summary>
+        /// 创建当前动作的维持动作行动计划
+        /// </summary>
+        /// <param name="net"></param>
+        /// <param name="time"></param>
+        /// <param name="reason"></param>
+        /// <returns></returns>
+        public static ActionPlan createMaintainPlan(Network net,int time,String reason,double expect,int planSteps)
+        {
+            ActionPlan plan = new ActionPlan();
+            plan.actions = new double[] { 0.5 }.ToList();
+            plan.judgeTime = time;
+            plan.judgeType = ActionPlan.JUDGE_MAINTAIN;
+            plan.forcastEvaulation = expect;
+            plan.planSteps = planSteps;
+            plan.reason = reason;
+            plan.inputObs = net.GetSplitReceptorValues().scene;
+            return plan;
+        }
+
+        public static ActionPlan CreateActionPlan(Network net,List<double> actions,int time,String judgeType, String reason, int planSteps)
+        {
+            ActionPlan plan = new ActionPlan();
+            plan.actions = actions;
+            plan.judgeTime = time;
+            plan.judgeType = judgeType;
+            plan.planSteps = planSteps;
+            plan.reason = reason;
+            plan.inputObs = net.GetSplitReceptorValues().scene;
+            return plan;
+        }
+
+        #endregion
+
+
+        #region 读写
+
+        public override string ToString()
         {
             StringBuilder str = new StringBuilder();
-            str.Append("    scene=" + this.inputObs.toString() + System.Environment.NewLine);
-            str.Append("    actions=" + Utility.toString(this.actions) + System.Environment.NewLine);
-            str.Append("    expect=" + this.expectNextObs.toString() + System.Environment.NewLine);
-            str.Append("    distance(similarity)=" + this.SimilarityDistance.ToString("F3") + System.Environment.NewLine);
-            str.Append("    inferences=" + System.Environment.NewLine);
-            for(int i=0;i< inferencesItems.Count;i++)
-            {
-                InferenceRecord record = inferencesItems[i];
-                str.Append("    " + (i + 1).ToString() + ". " + record.inf.getGene().Text);
-                str.Append("        " + record.ToString());
-            }
+            str.Append("judgeType=" + this.judgeType.ToString() + System.Environment.NewLine);
+            str.Append("reason=" + this.reason.ToString() + System.Environment.NewLine);
+            str.Append("scene=" + this.inputObs.toString() + System.Environment.NewLine);
+            str.Append("actions=" + Utility.toString(this.actions) + System.Environment.NewLine);
+            str.Append("evaulation=" + this.evaulation.ToString("F0") + System.Environment.NewLine);
+            str.Append("expect = " + this.forcastEvaulation.ToString("F0") + System.Environment.NewLine);
+            str.Append("planstep = " + this.planSteps.ToString() + System.Environment.NewLine);
             return str.ToString();
         }
+        #endregion
 
-        
+
     }
 }

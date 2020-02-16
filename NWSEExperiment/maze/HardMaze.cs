@@ -29,6 +29,7 @@ namespace NWSEExperiment.maze
         public Rectangle AOIRectangle { get; set; }
         public List<Point> POIPosition { get; set; }
         public float maxDistance; // Distance from corner to corner. Determined by AOI.
+        public double maxGoalDistance;
 
         public Point2D start_point; //Start location of the agent
         public Point2D goal_point;
@@ -83,6 +84,16 @@ namespace NWSEExperiment.maze
             TextReader infile = new StreamReader(name);
             HardMaze k = (HardMaze)x.Deserialize(infile);
             k.maxDistance = (float)Math.Sqrt(k.AOIRectangle.Width * k.AOIRectangle.Width + k.AOIRectangle.Height * k.AOIRectangle.Height);
+
+            k.maxGoalDistance = float.MinValue;
+            double d = k.goal_point.distance(new Point2D(k.AOIRectangle.X,k.AOIRectangle.Y));
+            if (d > k.maxGoalDistance) k.maxGoalDistance = d;
+            d = k.goal_point.distance(new Point2D(k.AOIRectangle.X+k.AOIRectangle.Width, k.AOIRectangle.Y));
+            if (d > k.maxGoalDistance) k.maxGoalDistance = d;
+            d = k.goal_point.distance(new Point2D(k.AOIRectangle.X, k.AOIRectangle.Y+k.AOIRectangle.Height));
+            if (d > k.maxGoalDistance) k.maxGoalDistance = d;
+            d = k.goal_point.distance(new Point2D(k.AOIRectangle.X+ k.AOIRectangle.Width, k.AOIRectangle.Y + k.AOIRectangle.Height));
+            if (d > k.maxGoalDistance) k.maxGoalDistance = d;
 
             k.name = name;
 
@@ -254,20 +265,15 @@ namespace NWSEExperiment.maze
 
         public static List<double> createInstinctAction(Network net, int time)
         {
-            String[] g = { "g1", "g2", "g3", "g4" };
-            double[] cAngle = { 0, Math.PI / 2, Math.PI, -Math.PI/ 2 };
-            for(int i =0;i<g.Length;i++)
-            {
-                double v = net.getNode(g[i]).GetValue(time)[0];
-                if (v <= 0) continue;
-                double angle = v;
-                if (v < 0.5) angle += 0.5;
-                else if (v > 0.5) angle -= 0.5;
-                else angle = 1.0;
-                
-                return new double[] { angle }.ToList();
-            }
-            return new double[] { 0.5 }.ToList(); ;
+            double v = net.getNode("g1").GetValue(time)[0];
+            double angle = v;
+            if (v < 0.5) angle += 0.5;
+            else if (v > 0.5) angle -= 0.5;
+            else angle = 1.0;
+
+            return new double[] { angle }.ToList();
+
+            
             /*
             //如果面朝目标，则直接向前走
             if (net.getNode("g1").GetValue(time)[0] == 1)

@@ -46,14 +46,12 @@ namespace NWSELib.net
         /// Id
         /// </summary>
         public int Id { get => this.genome.id; }
-        /// <summary>
-        /// 抽象思维
-        /// </summary>
-        public Imagination imagination;
+        
         /// <summary>
         /// 策略单元
         /// </summary>
         public Policy policy;
+        
 
         public override string ToString()
         {
@@ -184,23 +182,15 @@ namespace NWSELib.net
         #endregion
 
         #region 初始化
-        private double eplison = 1.0;
+       
         /// <summary>
         /// 重置计算
         /// </summary>
         public void Reset()
         {
-            this.nodes.ForEach(a => a.Reset());
-            this.nodes.ForEach(n => n.think_reset());
-            
-            eplison = 1.0;
+            this.nodes.ForEach(a => a.Reset());           
         }
-        public void thinkReset()
-        {
-            this.nodes.ForEach(n => n.think_reset());
-        }
-
-
+        
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -250,7 +240,7 @@ namespace NWSELib.net
                 }
             }
 
-            //imagination = new Imagination(this);
+            actionMemory = new BehaviourMemory(this);
             policy = new Policy(this);
         }
 
@@ -259,34 +249,17 @@ namespace NWSELib.net
         #endregion
 
         #region 状态
+        /** 最后一次获得的奖励 */
+        public double reward;
+        /// <summary>
+        /// 行动记忆空间
+        /// </summary>
+        public BehaviourMemory actionMemory;
+        /// <summary>
+        /// 行动计划链
+        /// </summary>
+        public ActionPlanChain actionPlanChain = new ActionPlanChain();
         
-
-        /// <summary>
-        /// 行动轨迹
-        /// </summary>
-        public List<ActionPlan> actionPlanTraces = new List<ActionPlan>();
-
-        /// <summary>
-        /// 最后行动计划
-        /// </summary>
-        public ActionPlan lastActionPlan
-        {
-            get
-            {
-                return actionPlanTraces.Count <= 0 ? null : actionPlanTraces[actionPlanTraces.Count - 1];
-            }
-        }
-        /// <summary>
-        /// 取得某个时间的行动计划
-        /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public ActionPlan getActionPlan(int time)
-        {
-            return actionPlanTraces.FirstOrDefault(ap => ap.judgeTime == time);
-        }
-
-
         #endregion
 
         #region 评价信息
@@ -358,7 +331,7 @@ namespace NWSELib.net
         #endregion
 
 
-
+        #region 网络活动
         /// <summary>
         /// 激活
         /// </summary>
@@ -393,46 +366,16 @@ namespace NWSELib.net
                 Inference inf = this.Inferences[i];
                 inf.Records.ForEach(r => r.adjustAccuracy(time));
                 inf.removeWrongRecords();
-
-
             }
 
-            //5. (上一次)行为评估
-            this.setReward(reward, time, 1);
-
-            //6. 归纳
-            /*if (Session.GetConfiguration().learning.imagination.abstractLevel > 0)
-                imagination.doAbstract();
-            else
-                imagination.inferences = new List<Inference>(this.Inferences);
-            */
-            //imagination.inferences = this.Inferences;
-
-            //6. 推理
-            //imagination.doInference(time, session);
-
-            
-
-            //7. 推理想象、行为决策
-            ActionPlan plan = null;
-            eplison = time == 0 ? 1.0 : 1  - time/100.0;
-            if (rng.NextDouble() <= eplison)
-            {
-                if (reward >= 0)
-                    plan = this.createNormalPlan(time);
-                else plan = createDefaultPlan(time);
-            }
-            else 
-            {
-                plan = policy.doImagination(time, session);
-                if (plan == null) plan = createDefaultPlan(time);
-                //plan = imagination.doImagination(time, session);
-                //if (plan == null) plan = createDefaultPlan(time);
-            }
-            this.actionPlanTraces.Add(plan);
+            //5. 行为决策   
+            this.reward = reward;
+            if (this.actionPlanChain.Last != null)
+                this.actionPlanChain.Last.reward = reward;
+            policy.doEvaluation(time, session);            
             setEffectValue(time);
 
-            //9.记录行为
+            //6.记录行为
             List<double> actions = this.Effectors.ConvertAll<double>(n => (double)n.Value);
             for(int i=0;i< this.ActionReceptors.Count;i++)
             {
@@ -441,720 +384,167 @@ namespace NWSELib.net
            
             return actions;
         }
-
-        #region 回忆和推理
-        public ActionPlan createNormalPlan(int time)
-        {
-            ActionPlan plan = new ActionPlan();
-            plan.actions = new double[] { 0.5 }.ToList();
-            plan.judgeTime = time;
-            plan.judgeType = ActionPlan.JUDGE_DEFAULT;
-            plan.mode = "奖励非负，维持动作";
-            int index = 0;
-            plan.inputObs = this.Receptors.ConvertAll(r => r.Gene.IsActionSensor() ? new Vector(plan.actions[index++]) : r.Value);
-            return plan;
-
-        }
-        public ActionPlan createDefaultPlan(int time)
-        {
-            ActionPlan plan = new ActionPlan();
-            if(rng.NextDouble()<=0.0)
-            {
-                plan.actions = Session.instinctActionHandler(this, time);
-                plan.judgeTime = time;
-                plan.judgeType = ActionPlan.JUDGE_INSTINCT;
-            }else
-            {
-                plan.actions = Effectors.ConvertAll(e=>e.randomValue(this,time));
-                plan.judgeTime = time;
-                plan.judgeType = ActionPlan.JUDGE_RANDOM;
-            }
-            int index = 0;
-            plan.inputObs = this.Receptors.ConvertAll(r => r.Gene.IsActionSensor()? new Vector(plan.actions[index++]):r.Value);
-
-            return plan;
-        }
-        public String showActionPlan()
-        {
-            if (lastActionPlan == null) return "";
-            StringBuilder str = new StringBuilder();
-            str.Append("行动方式="+ lastActionPlan.judgeType + System.Environment.NewLine);
-            str.Append("推理准则="+ lastActionPlan.mode + System.Environment.NewLine);
-            str.Append("评估值=" + lastActionPlan.evluation.ToString("F3") + System.Environment.NewLine);
-            str.Append("行为=");
-            str.Append(showActionText() + System.Environment.NewLine);
-            str.Append(System.Environment.NewLine);
-
-            if(this.lastActionPlan.inferencesItems ==null || this.lastActionPlan.inferencesItems.Count<=0)
-                return str.ToString();
-
-
-            Dictionary<String, String> strs = new Dictionary<string, string>();
-            foreach(InferenceRecord r in this.lastActionPlan.inferencesItems)
-            {
-                String infs = r.inf.summary();
-                if(!strs.ContainsKey(infs))
-                {
-                    strs.Add(infs," "+r.summary()+System.Environment.NewLine);
-                }else
-                {
-                    strs[infs] = "  " + r.summary() + System.Environment.NewLine;
-                }
-            }
-
-            foreach(KeyValuePair<String,String> kv in strs)
-            {
-                str.Append(kv.Key + System.Environment.NewLine);
-                str.Append(kv.Value);
-            }
-            return str.ToString();
-        }
-        public String showActionText()
-        {
-            return this.Effectors.ConvertAll(e => e.getValueText()).Aggregate((x, y) => x + "," + y); 
-        }
         /// <summary>
         /// 根据行动计划设定输出
-        /// //没有行动计划,两种原因导致：1）没有找到相似场景；2）行动计划的最大评估值太小,相当于处于困境
-            //对于前一种，可以执行本能行为，后一种则执行随机行为
+
         /// </summary>
-        private void setEffectValue(int time,bool random=true)
+        private void setEffectValue(int time, bool random = true)
         {
             for (int i = 0; i < this.Effectors.Count; i++)
             {
-                //Gussian gau = Gaussian.FromMeanAndVariance(this.lastActionPlan.actions[i],0.01);
-                this.Effectors[i].activate(this, time, this.lastActionPlan.actions[i]);
-                //this.Effectors[i].activate(this, time, gau.Sample());
+                this.Effectors[i].activate(this, time, this.actionPlanChain.Last.actions[i]);
             }
         }
 
-        
-        
-        /// <summary>
-        /// 取得特定id的最新值
-        /// </summary>
-        /// <param name="inf"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public List<Vector> getValues(List<int> ids)
+        public List<Vector> forward_inference(List<Vector> obs = null)
         {
-            return ids.ConvertAll(id => this.getNode(id).Value);
-        }
+            if (obs == null)
+                obs = this.GetReceoptorValues();
 
-        public (Vector value, List<Node> nodes) flattenValues(List<int> ids, List<Vector> values)
-        {
-            Vector rv = new Vector(true, values.size());
-            List<Node> rn = new List<Node>();
-
-            int index = 0;
-            for (int i=0;i<ids.Count;i++)
-            {
-                Node node = this[ids[i]];
-                (List<double> vs, List<Node> nodes) = flattenValues(node, values[i]);
-                for(int j=0;j<vs.Count;j++)
-                {
-                    rv[index++]=vs[j];
-                    rn.Add(nodes[j]);
-                }
-            }
-            return (rv, rn);
             
-        }
-        /// <summary>
-        /// 将某个节点的值分解到最小的输入double值,以及每个值的对应基础节点
-        /// </summary>
-        /// <param name="node"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        public (List<double>,List<Node>) flattenValues(Node node,Vector values, List<double> v=null, List<Node> n=null)
-        {
-            if (v == null) v = new List<double>();
-            if (n == null) n = new List<Node>();
 
-            List<Node> childs = node.getInputNodes(this);
-            if(childs == null || childs.Count<=0)
+            //准备新的观察数据，初始值都是null
+            Vector[] newObs = new Vector[obs.Count];
+            //新的观察数据中的动作部分用原观察替换
+            List<Receptor> receptors = this.Receptors;
+            int[] actionIndex = this.ActionReceptors.ConvertAll(ar => receptors.IndexOf(ar)).ToArray();
+            actionIndex.ToList().ForEach(i => newObs[i] = obs[i].clone());
+
+            //对每一个推理节点执行前向推理
+            foreach(Inference inf in this.Inferences)
             {
-                v.Add(values[v.Count]);
-                n.Add(node);
-            }
-            for(int i=0;i<childs.Count;i++)
-            {
-                (v, n) = flattenValues(childs[i], values, v, n);
-            }
-            return (v, n);
-        }
-
-        
-        public double getRankedValue(Receptor r, double value,int abstractLevel)
-        {
-            if (abstractLevel == 0) return value;
-
-            int sectionCount = r.getGene().AbstractSectionCount;
-            if (sectionCount <= 0) return value;
-
-            return MeasureTools.GetMeasure(r.Cataory).getRankedValue(value, abstractLevel, sectionCount);
-        }
-
-
-        
-        public List<Vector> getRankedValues(Node node,List<Vector> orginValues,int abstractLevel)
-        {
-            (Vector flattenValue,List<int> dSize) = orginValues.flatten();
-            double[] rankedValues = new double[flattenValue.Size];
-            
-            List<Receptor> receptors = node.Gene.getLeafGenes().ConvertAll(g=>(Receptor)this[g.Id]);
-            for(int i = 0;i< receptors.Count;i++)
-            {
-                double d = this.getRankedValue(receptors[i], flattenValue[i], abstractLevel);
-                rankedValues[i] = d;
-            }
-            return new Vector(rankedValues).split(dSize); 
-        }
-        
-        
-        /// <summary>
-        /// 取得inference接续的推理节点
-        /// 要求是inference的后置变量部分完全包含了其他推理的前置条件部分（动作感知除外）
-        /// </summary>
-        /// <param name="inference"></param>
-        /// <returns></returns>
-        public List<Inference> getNextInferences(Inference inference)
-        {
-            List<int> postVarIds = inference.getGene().getVariableIds();
-            List<Inference> r = new List<Inference>();
-
-            for (int i=0;i<this.Inferences.Count;i++)
-            {
-                if (this.Inferences[i] == inference) continue;
-                List<int> varCondIds = ((Inference)this.Inferences[i]).getGene().getConditionsExcludeActionSensor();
-                if (Utility.ContainsAll(postVarIds, varCondIds))
-                    r.Add((Inference)this.Inferences[i]);
-            }
-            return r;
-        }
-
-        
-        /// <summary>
-        /// 因为inference的结果results包含了nextinf的所有输入（动作除外）
-        /// 将这些输入提取出来
-        /// </summary>
-        /// <param name="inference">推理</param>
-        /// <param name="results">结果</param>
-        /// <param name="nextinf"></param>
-        /// <returns>只是环境输入部分</returns>
-        public List<Vector> computeInput(Inference inference, List<Vector> results, Inference nextinf)
-        {
-            List<int> infVarIds = inference.getGene().getVariableIds();
-            if (infVarIds.Count != results.Count) return null;
-            List<int> nextinfcondIds = nextinf.getGene().getConditionsExcludeActionSensor();
-            List<Vector> r = new List<Vector>();
-            for(int i=0;i< nextinfcondIds.Count;i++)
-            {
-                int index = infVarIds.IndexOf(nextinfcondIds[i]);
-                if (index < 0) return null;
-                r.Add(results[index]);
-            }
-            return r;
-        }
-
-        /// <summary>
-        /// 取得推理节点输出部分(后置变量)的值
-        /// 只要有一个输出在time处没有值，都将返回null
-        /// </summary>
-        /// <param name="inference"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public List<Vector> getOutputValues(Inference inference, int time)
-        {
-            List<int> varIds = inference.getGene().getVariableIds();
-            List<Vector> vs = varIds.ConvertAll(id => this.getNode(id).GetValue(time));
-            return vs.Contains(null) ? null : vs;
-        }
-
-        public const int REWARD_EXP = 1;
-        public const int REWARD_MEAN = 2;
-        public const int REWARD_ONCE = 3;
-
-        public void setReward2(double reward, int time, int mode = 1, bool clear = true)
-        {
-            if (reward == 0) return;
-            if (reward == 100.0) mode = 3;//如果是摆脱撞墙，这个正向奖励不传播
-
-            List<InferenceRecord> rs = new List<InferenceRecord>();
-            foreach (Inference inf in imagination.inferences) 
-            {
-                List<InferenceRecord> records = inf.getVariableMatchRecords(this,time);
-                if (records == null || records.Count <= 0) continue;
-                rs.AddRange(records);
-            }
-            if (rs.Count <= 0) return;
-            propagateReward(reward,time, 0, rs, mode);
-        }
-        private void propagateReward(double reward, int time,int level, List<InferenceRecord> records,int mode = 1)
-        {
-            //检查传播终止条件
-            if (records == null || records.Count <= 0) return;
-            //if (records.All(r => !r.inf.getGene().hasEnvDenpend())) return;
-            
-            //计算奖励并分配
-            double rr = reward;
-            if (mode == 1) rr = Math.Exp(-level) * reward;
-            //records.ForEach(r => { if (r.inf.getGene().hasEnvDenpend()) r.evulation += rr; });
-            records.ForEach(r =>  r.evulation += rr );
-            if (mode == 3) return;
-            if (level >= 5) return;
-
-            //反向传播
-            List<InferenceRecord> nextRecords = new List<InferenceRecord>();
-            for(int i=0;i<records.Count;i++)
-            {
-                List<Inference> infs = this.getInverseMatchInference(records[i].inf,this.imagination.inferences);
-                if (infs == null || infs.Count <= 0) continue;
-                foreach(Inference nextInf in infs)
+                int[] condIndex = inf.getGene().getConditionIds()
+                                   .ConvertAll(id => (Receptor)this[id])
+                                   .ConvertAll(node => receptors.IndexOf(node))
+                                   .ToArray();
+                int[] varIndex = inf.getGene().getVariableIds()
+                                   .ConvertAll(id => (Receptor)this[id])
+                                   .ConvertAll(node => receptors.IndexOf(node))
+                                   .ToArray();
+                List <Vector> condValues = condIndex.ToList().ConvertAll(index=>newObs[index]);
+                List<Vector> varValues = inf.forward_inference(condValues).Item2;
+                for(int i=0;i< varValues.Count;i++)
                 {
-                    List<int> varIds = nextInf.getGene().getVariableIds();
-                    List<Vector> varValues = records[i].getConditionValueByIds(varIds);
-                    List<InferenceRecord> temprecords = nextInf.getVariableMatchRecords(this,time, varValues);
-                    //if (temprecords.Contains(records[i])) temprecords.Remove(records[i]);
-                    if (temprecords == null || temprecords.Count <= 0) continue;
-                    foreach(InferenceRecord temp in temprecords)
-                    {
-                        if (nextRecords.Contains(temp)) continue;
-                        nextRecords.Add(temp);
-                    }
+                    if (varIndex[i] == -1) continue;
+                    newObs[varIndex[i]] = varValues[i].clone();
                 }
             }
 
-            if (nextRecords.Count <= 0) return;
+            return newObs.All(v => v != null) ? newObs.ToList() : null;
 
-            propagateReward(reward,time,level+1,nextRecords,mode);
-
-        }
-
-        public List<Inference> getInverseMatchInference(Inference inf,List<Inference> infs)
-        {
-            if (inf == null || infs==null || infs.Count<=0) return null;
-            List<int> condIds = inf.getGene().getConditionIds();
-
-            return infs.FindAll(i =>
-                Utility.ContainsAll(condIds,i.getGene().getVariableIds())
-            );
-
-        }
-        public void setReward(double reward, int time, int mode = 1, bool clear = true)
-        {
-            if (reward == 0) return;
-            if (actionPlanTraces.Count <= 0) return;
-            for (int i = actionPlanTraces.Count - 1; i >= 0; i--)
-            {
-                
-                //double r = reward / (actionPlanTraces.Count-i);
-                double r = Math.Exp(i - this.actionPlanTraces.Count + 1) * reward;
-                if (actionPlanTraces[i].inferencesItems.Count > 0)
-                {
-                    actionPlanTraces[i].inferencesItems.ForEach(item =>
-                        item.evulation += r
-                    );
-                }else if(i == actionPlanTraces.Count - 1)
-                {
-                    List<InferenceRecord> infRecords = getMatchRecordsInThink(actionPlanTraces[i].inputObs,time);
-                    if (infRecords.Count > 0)
-                        infRecords.ForEach(item => item.evulation += r);
-                }
-                if (reward == Session.GetConfiguration().evaluation.reward.away)
-                    return;
-                
-
-            }
-            if (reward == Session.GetConfiguration().evaluation.reward.collision)
-                actionPlanTraces.Clear();
-        }
-
-        private List<InferenceRecord> getMatchRecordsInThink(List<Vector> obs,int time)
-        {
-            thinkReset();
-            for (int j = 0; j < this.Receptors.Count; j++)
-            {
-                this.Receptors[j].think(this, time, obs[j]);
-            }
-            this.Handlers.ForEach(h => h.think(this, time, null));
-
-            List<InferenceRecord> temp = new List<InferenceRecord>();
-            for (int j = 0; j < this.Inferences.Count; j++)
-            {
-                Inference inf = this.Inferences[j];
-                //if (!inf.getGene().hasEnvDenpend()) continue; //根外界环境无关的不做评估
-                List<(InferenceRecord, double)> matchedRecords = inf.getMatchRecordsInThink(this, time);
-                if (matchedRecords == null || matchedRecords.Count <= 0) continue;
-                for (int k = 0; k < matchedRecords.Count; k++)
-                {
-                    if (temp.Contains(matchedRecords[k].Item1))
-                    {
-                        matchedRecords.RemoveAt(k--);
-                    }
-                }
-                if (matchedRecords == null || matchedRecords.Count <= 0) continue;
-                temp.AddRange(matchedRecords.ConvertAll(m => m.Item1));
-                
-            }
-            return temp;
-        }
-        public void setReward1(double reward,int time,int mode = 1,bool clear=true)
-        {
-            if (reward == 0) return;
-            if (actionPlanTraces.Count <= 0) return;
-            if (reward == 1.0) mode = 3;//如果是摆脱撞墙，这个正向奖励不传播
-            for (int i = actionPlanTraces.Count - 1; i >= 0; i--)
-            {
-                ActionPlan plan = actionPlanTraces[i];
-                thinkReset();
-                for(int j=0;j<this.Receptors.Count;j++)
-                {
-                    this.Receptors[j].think(this, time, plan.inputObs[j]);
-                }
-                this.Handlers.ForEach(h => h.think(this, time, null));
-
-                List<InferenceRecord> temp = new List<InferenceRecord>();
-                for (int j=0;j<this.imagination.inferences.Count;j++)
-                {
-                    Inference inf = this.imagination.inferences[j];
-                    //if (!inf.getGene().hasEnvDenpend()) continue; //根外界环境无关的不做评估
-                    List<(InferenceRecord,double)> matchedRecords = inf.getMatchRecordsInThink(this,time);
-                    if (matchedRecords == null || matchedRecords.Count <= 0) continue;
-                    for(int k=0;k<matchedRecords.Count;k++)
-                    {
-                        if (temp.Contains(matchedRecords[k].Item1))
-                        {
-                            matchedRecords.RemoveAt(k--);
-                        }
-                    }
-                    if (matchedRecords == null || matchedRecords.Count <= 0) continue;
-                    temp.AddRange(matchedRecords.ConvertAll(m=>m.Item1));
-                    double r = reward;
-                    if(mode == 1)r = Math.Exp(i - this.actionPlanTraces.Count + 1) * reward;
-                    matchedRecords.ForEach(mr =>
-                    {
-                        mr.Item1.evulation += r*(1-mr.Item2);
-                        mr.Item1.childs.ForEach(mrc => mrc.evulation += r * (1 - mr.Item2));
-                    });
-                }
-                
-                if (mode == REWARD_ONCE) break;
-            }
-            if (reward == Session.GetConfiguration().evaluation.reward.collision) 
-                actionPlanTraces.Clear();
         }
         #endregion
 
-        #region 反向推理
-        /*
+        #region 观察空间管理
         /// <summary>
-        /// 评判
+        /// 取得当前外部观察
         /// </summary>
-        private void judge(int time)
-        {
-            //这是该函数将得到的结果，第一项是推理链，第二项是对每一个动作Id，其选择的值和推理路径
-            List<(InferenceChain chain, Dictionary<int, (double, int[])>)> judgeResultList = new List<(InferenceChain chain, Dictionary<int, (double, int[])>)>();
-
-            
-            //拷贝评判项和权重，做好一项就删除一项
-            List<JudgeGene> judges = new List<JudgeGene>(this.genome.judgeGenes);
-            List<double> ws = judges.ConvertAll(j=>j.weight);
-            //对每项做评判
-            while (judges.Count > 0)
-            {
-                int judgeIndex = ws.argmax();
-                JudgeGene judgeItem = judges[judgeIndex];
-                double juegeItemWeight = ws[judgeIndex];
-
-                (var var1, var var2) = doJudge(judgeItem);
-                if (var1 != null)
-                {
-                    judgeResultList.Add((var1, var2));  
-                }
-                ws.RemoveAt(judgeIndex);
-                judges.RemoveAt(judgeIndex);
-            }
-            //没有得到有效评判结果（初始的时候所有节点都没有值）
-            if(judgeResultList.Count<=0)
-            {
-                this.Effectors.ForEach(e => e.randomValue(this,time));
-                this.currentActionTraces = null;
-                this.currentInferenceChain = null;
-                this.judgeTime = time;
-                return;
-            }
-            //对每一个评判的结果一个评分：进行正向推断，选择距离容忍界限最近的
-            List<double> errors = new List<double>();
-            for(int i=0;i<judgeResultList.Count;i++)
-            {
-                double error = 0;
-                if(judgeResultList[i].chain == null)
-                {
-                    errors.Add(10000);
-                    continue;
-                }
-                for(int j=0;j< judgeResultList.Count;j++)
-                {
-                    Inference inf = (Inference)this.getNode(judgeResultList[j].chain.head.referenceNode);
-                    List<int> condids = ((InferenceGene)inf.Gene).getConditions().ConvertAll(x => x.Item1);
-                    List<Vector> condValues = new List<Vector>();
-                    for (int k = 0; k < condids.Count; k++)
-                    {
-                        Node node = this.getNode(condids[k]);
-                        if (!node.Group.StartsWith("action"))
-                            condValues.Add(node.Value);
-                        else
-                        {
-                            int actionId = this.getActionIdByName(node.Name.Substring(1));
-                            double val = judgeResultList[i].Item2[actionId].Item1;
-                            condValues.Add(new Vector(new double[] { val }));
-                        }
-                    }
-                    Vector varValue = inf.forwardinference(condValues);
-                    double varlen = varValue.length();
-                    double expectlen = judgeResultList[i].chain.varValue;
-                    if (judgeResultList[i].chain.juegeItem.expression == "argmax")
-                    {
-                        if (varlen >= expectlen) error += 0;
-                        else error += System.Math.Abs(varlen - expectlen);
-                    }
-                    else
-                    {
-                        if (varlen <= expectlen) error += 0;
-                        else error += System.Math.Abs(varlen - expectlen);
-
-                    }
-                    int judgeIndex = this.genome.judgeGenes.IndexOf(judgeResultList[i].chain.juegeItem);
-                    error *= this.genome.judgeGenes[judgeIndex].weight;
-                    errors.Add(error);
-                }
-            }
-
-            //选择误差最小的推理
-            int minerrorIndex = errors.argmin();
-            this.currentInferenceChain = judgeResultList[minerrorIndex].chain;
-            this.currentActionTraces = judgeResultList[minerrorIndex].Item2;
-
-            if (currentActionTraces == null || currentActionTraces.Count <= 0)
-            {
-                this.Effectors.ForEach(e => e.activate(this, time, 0));
-            }
-            else
-            {
-                //计算效应器输出
-                foreach (int key in this.currentActionTraces.Keys)
-                {
-                    double value = this.currentActionTraces[key].Item1;
-                    Effector effector = getEffectorByActionSensorId(key);
-                    effector.activate(this, time, new Vector(value));
-
-                }
-            }
-            
-            this.judgeTime = time;
-        }
-        private (InferenceChain chain, Dictionary<int, (double, int[])> actionValues) doJudge(JudgeGene judgeItem)
-        { 
-            List<int> judge_conditions = judgeItem.conditions;
-            double judge_variableValue = judgeItem.expression == "argmax" ? double.MinValue : double.MaxValue;
-
-            //找到所有包含推理变量（后置）的推理项
-            List<Node> varInferences = this.Inferences.FindAll(inf => ((InferenceGene)inf.Gene).getVariable().Item1 == judgeItem.variable);
-            if (varInferences == null || varInferences.Count <= 0) return (null,null);
-
-            //选择一个最合适的根推理
-            Inference rootInference = null;
-            List<Vector> rootInferenceValues = null;
-            int rootInferenceVarId = 0, rootInferenceVarIndex = -1;
-            int rootInferenceRecordIndex = -1;
-            for (int j = 0; j < varInferences.Count; j++)
-            {
-                (List<Vector> values, int varId, double value,int recordindex) = ((Inference)varInferences[j]).arginference(judgeItem.expression);
-                if (values == null) continue;
-                if (judgeItem.expression == "argmax" && value > judge_variableValue)
-                {
-                    judge_variableValue = value;
-                    rootInference = (Inference)varInferences[j];
-                    rootInferenceValues = values;
-                    rootInferenceRecordIndex = recordindex;
-                }
-                else if (judgeItem.expression == "argmin" && value < judge_variableValue)
-                {
-                    judge_variableValue = value;
-                    rootInference = (Inference)varInferences[j];
-                    rootInferenceValues = values;
-                    rootInferenceRecordIndex = recordindex;
-                }
-            }
-            if (rootInference == null)
-                return (null, null);
-            rootInferenceVarId = ((InferenceGene)rootInference.Gene).getVariable().Item1;
-            rootInferenceVarIndex = ((InferenceGene)rootInference.Gene).getVariableIndex();
-
-            //在选择的根推理上逐级回溯构造推理链
-            InferenceChain chain = new InferenceChain()
-            {
-                juegeItem = judgeItem,
-                varValue = judge_variableValue,
-                head = new InferenceChain.Item()
-                {
-                    referenceNode = rootInference.Id,
-                    referenceRecordIndex = rootInferenceRecordIndex,
-                    values = rootInferenceValues,
-                    varIndex = rootInferenceVarIndex,
-                    varTime = 0
-                }
-            };
-
-            
-            chain = do_reverse_inference(chain,chain.head);
-            this.currentInferenceChain = chain;
-
-
-
-            //在推理链上选择要执行的动作
-            List<int> actionSensorIds = this.ActionReceptors.ConvertAll(r => r.Id);
-            Dictionary<int, (double,int[])> actionValues = new Dictionary<int, (double, int[])>();
-
-            for(int k=0;k<actionSensorIds.Count;k++)
-            {
-                List<List<int>> traces = chain.findActionTrace(this,actionSensorIds[k]);
-                if(traces == null || traces.Count<=0) //没有推理到该动作，给一个随机值
-                {
-                    double min = Session.GetConfiguration().agent.receptors.actions[k].Range.Min;
-                    double max = Session.GetConfiguration().agent.receptors.actions[k].Range.Max;
-                    double value = 0.5;//new Random().NextDouble() * (max - min) + min;
-                    actionValues.Add(actionSensorIds[k], (value, null));
-                }
-                else
-                {
-                    //随机选择一个推理迹
-                    int traceIndex = new Random().Next(0,traces.Count);
-                    double value = chain.getValueFromTrace(this,actionSensorIds[k], 0, traces[traceIndex]);
-                    double min = Session.GetConfiguration().agent.receptors.actions[k].Range.Min;
-                    double max = Session.GetConfiguration().agent.receptors.actions[k].Range.Max;
-                    value = Math.Min(Math.Max(value, min), max);
-                    actionValues.Add(actionSensorIds[k], (value, traces[traceIndex].ToArray()));
-                }
-            }
-            return (chain, actionValues);
-        }
-
-        
-
-        /// <summary>
-        /// 反向推理
-        /// </summary>
-        /// <param name="chain">当前推理链</param>
-        /// <param name="item">当前推理项</param>
         /// <returns></returns>
-        private InferenceChain do_reverse_inference(InferenceChain chain, InferenceChain.Item item)
+        public List<Vector> GetReceoptorValues()
         {
-            //1.取得记忆项
-            Inference inf = (Inference)this.getNode(item.referenceNode);
-
-            //2取得与该记忆项的条件匹配的其他记忆项（即以inf的前置条件作为后置变量的所有记忆节点）
-            ////2.1取得inf的条件部分
-            List<int> condids = ((InferenceGene)inf.Gene).getConditions().ConvertAll(c => c.Item1);
-            List<int> condTimes = ((InferenceGene)inf.Gene).getConditions().ConvertAll(c => c.Item2);
-            ////2.2遍历所有记忆节点，查找满足条件的
-            List<Node> childInfs = this.Inferences.FindAll(f => ((InferenceGene)f.Gene).matchVariable(condids.ToArray()));
-            if (childInfs == null || childInfs.Count <= 0)
-                return chain;
-
-            //3去掉在推理轨迹上已经出现的记忆节点
-            for (int i=0;i< childInfs.Count;i++)
-            {
-                if(inferenceInChainTrace(chain,item,(Inference)childInfs[i]))
-                {
-                    childInfs.RemoveAt(i--);
-                }
-            }
-            if (childInfs == null || childInfs.Count <= 0)
-                return chain;
-
-            //4 深度遍历
-            for(int i=0;i< childInfs.Count;i++)
-            {
-                //记忆节点基本信息
-                Inference cinf = (Inference)childInfs[i];
-                int varIndex = cinf.getGene().getVariableIndex();
-                (int varid, int vartime) = cinf.getGene().getVariable();
-                Vector varValue = item.values[item.varIndex];
-                (int t1, int t2) = cinf.getGene().getTimeDiff();
-                //记忆节点中的记忆记录的后置变量维的值与上一个推理获得的值最接近的
-                IntegrationRecord cinfRecord =  cinf.getNearestRecord(varIndex,varValue);
-                if (cinfRecord == null) continue;
-                
-                //在记忆记录附近采样
-                int sampleCount = Session.GetConfiguration().agent.inferencesamples;
-                List<List<Vector>> cinf_samples = cinfRecord.sample(sampleCount);
-                List<double> distances = cinf_samples.ConvertAll(s => s[varIndex].distance(varValue));
-                List<Vector> samplesSelected = cinf_samples[distances.argmin()];
-
-                //创建新的推理项
-                InferenceChain.Item newItem = new InferenceChain.Item()
-                {
-                    referenceNode = cinf.Id,
-                    referenceRecordIndex = cinf.Records.IndexOf(cinfRecord),
-                    values = samplesSelected,
-                    varIndex = varIndex,
-                    varTime = (t1==t2)?item.varTime:item.varTime+1,
-                    prev = item
-                };
-                item.next.Add(newItem);
-
-                //深度递归
-                chain = do_reverse_inference(chain, newItem);
-            }
-
-            
-            return chain;
-
+            return this.Receptors.ConvertAll(r => r.Value.clone());
         }
-
         /// <summary>
-        /// 在从head到item的推理路径上是否有inf出现
+        /// 分非动作和动作取得外部观察值
         /// </summary>
-        /// <param name="chain"></param>
-        /// <param name="item"></param>
         /// <returns></returns>
-        private bool inferenceInChainTrace(InferenceChain chain,InferenceChain.Item item,Inference inf)
+        public (List<Vector> scene,List<double> actions) GetSplitReceptorValues()
         {
-            if (item == null) return false;
-            if (item.referenceNode == inf.Id) return true;
-            while(item != null)
-            {
-                if (item.referenceNode == inf.Id) return true;
-                item = item.prev;
-            }
-            return false;
+            return (
+                this.Receptors.FindAll(r => !r.Gene.IsActionSensor()).ConvertAll(r => r.Value.clone()),
+                this.Receptors.FindAll(r => r.Gene.IsActionSensor()).ConvertAll(r => r.Value[0])
+                );
         }
         /// <summary>
-        /// 处理接受到的奖励，相当于适应度（-1到1之间）
-        /// 根据适应度，设定推理路径上的各个推断节点和处理节点的可靠度
+        /// 计算两个外部观察的距离
         /// </summary>
-        /// <param name="reward"></param>
-        public void setRewardInInferenceChain(double reward)
+        /// <param name="obs1"></param>
+        /// <param name="obs2"></param>
+        /// <returns></returns>
+        public List<double> GetReceptorDistance(List<Vector> obs1, List<Vector> obs2)
         {
-            if (currentInferenceChain == null) return;
-            foreach(int key in currentActionTraces.Keys)
+            List<double> r = new List<double>();
+            for (int i = 0; i < Receptors.Count; i++)
             {
-                if (this.currentActionTraces[key].Item2 == null) continue;
-                int count = this.currentActionTraces[key].Item2.Length;
-                double avg = reward / (count + 1);
-                List<InferenceChain.Item> items = currentInferenceChain.getItemsFromTrace(this.currentActionTraces[key].Item2);
-                if (items == null || items.Count <= 0) continue;
-                for (int j = 0; j < items.Count; j++)
+                r.Add(Receptors[i].distance(obs1[i][0],obs2[i][0]));
+            }
+            return r;
+        }
+
+        public List<double> GetReceptorDistance(List<Receptor> receptors,Vector obs1, Vector obs2)
+        {
+            List<double> r = new List<double>();
+            for (int i = 0; i < receptors.Count; i++)
+            {
+                r.Add(receptors[i].distance(obs1[i], obs2[i]));
+            }
+            return r;
+        }
+
+        /// <summary>
+        /// 创建一组新的观察，将其中动作部分移除
+        /// </summary>
+        /// <param name="obs"></param>
+        /// <returns></returns>
+        public List<Vector> RemoveActionFromReceptor(List<Vector> obs)
+        {
+            List<Receptor> receptors = this.Receptors;
+            int[] actionIndex = this.ActionReceptors.ConvertAll(ar => receptors.IndexOf(ar)).ToArray();
+
+            List<Vector> r = new List<Vector>();
+            for(int i=0;i<obs.Count;i++)
+            {
+                if (actionIndex.Contains(i)) continue;
+                r.Add(obs[i]);
+            }
+            return r;
+        }
+        /// <summary>
+        /// 将观察中的行为部分用计划部分替换
+        /// </summary>
+        /// <param name="curObs"></param>
+        /// <param name="plan"></param>
+        /// <returns></returns>
+        public List<Vector> ReplaceWithPlanAction(List<Vector> curObs, ActionPlan plan)
+        {
+            int index = 0;
+            for (int i = 0; i < Receptors.Count; i++)
+            {
+                if (Receptors[i].Gene.IsActionSensor())
                 {
-                    Node node = this.nodes.FirstOrDefault(n => n.Id == items[j].referenceNode);
-                    node.Reability = node.Reability + avg;
+                    curObs[i] = new Vector(plan.actions[index++]);
                 }
             }
-            
+            return curObs;
         }
-        */
+        /// <summary>
+        /// 将当前观察中的行为部分替换为维持行动
+        /// </summary>
+        /// <param name="curObs"></param>
+        /// <returns></returns>
+        public List<Vector> ReplaceMaintainAction(List<Vector> curObs)
+        {
+            for (int i = 0; i < Receptors.Count; i++)
+            {
+                if (Receptors[i].Gene.IsActionSensor())
+                {
+                    curObs[i] = new Vector(0.5);
+                }
+            }
+            return curObs;
+        }
+
+        /// <summary>
+        /// 创建随机动作
+        /// </summary>
+        /// <param name="randomType"></param>
+        /// <returns></returns>
+        public List<double> CreateRandomActions(String randomType="uniform")
+        {
+            return this.Receptors.FindAll(r => r.getGene().IsActionSensor())
+                .ConvertAll(r => r.randomValue(randomType));
+        }
+
         #endregion
 
 

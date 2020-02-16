@@ -39,7 +39,7 @@ namespace NWSELib.genome
             throw new Exception(this.Name + "无法完成有效分级：" + abstraceLevel.ToString() + ",");
         }
 
-        public int AbstractSectionCount { get => getAbstractSectionCount(this.AbstractLevel); }
+        public int SampleCount { get => getAbstractSectionCount(this.AbstractLevel); }
 
         public List<String> AbstractLevelNames 
         {
@@ -78,8 +78,8 @@ namespace NWSELib.genome
         {
             get
             {
-                if (AbstractSectionCount == 0) return 0;
-                return this.Range.Distance / this.AbstractSectionCount;
+                if (SampleCount == 0) return 0;
+                return this.Range.Distance / (this.SampleCount-1);
             }
         }
 

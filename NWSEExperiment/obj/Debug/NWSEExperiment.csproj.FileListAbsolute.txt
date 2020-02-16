@@ -27,9 +27,6 @@ D:\gitlib\NWSE\NWSEExperiment\bin\Debug\lib\Microsoft.ML.Probabilistic.Learners.
 D:\gitlib\NWSE\NWSEExperiment\bin\Debug\lib\Microsoft.ML.Probabilistic.Learners.xml
 D:\gitlib\NWSE\NWSEExperiment\bin\Debug\lib\Microsoft.ML.Probabilistic.pdb
 D:\gitlib\NWSE\NWSEExperiment\bin\Debug\lib\Microsoft.ML.Probabilistic.xml
-D:\gitlib\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.dll
-D:\gitlib\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.pdb
-D:\gitlib\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.xml
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\lib\Microsoft.ML.Probabilistic.Compiler.dll
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\lib\Microsoft.ML.Probabilistic.Compiler.pdb
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\lib\Microsoft.ML.Probabilistic.Compiler.xml
@@ -62,3 +59,6 @@ E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\NWSEExperiment.pdb
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.dll
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.pdb
 E:\gitlib\annunakichb\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.xml
+D:\gitlib\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.dll
+D:\gitlib\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.pdb
+D:\gitlib\NWSE\NWSEExperiment\bin\Debug\Microsoft.ML.Probabilistic.xml

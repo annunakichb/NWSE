@@ -360,5 +360,14 @@ namespace NWSELib.common
             this.recursiveFuncMaxHistory = recursiveFuncMaxHistory;
         }
         #endregion
+
+        #region 计算
+        public bool In(double value)
+        {
+            if (cataory == Cataory.Enum)
+                return this.values.Contains(value);
+            return value >= Min && value <= Max;
+        }
+        #endregion
     }
 }

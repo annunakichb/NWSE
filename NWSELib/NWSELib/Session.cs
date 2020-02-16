@@ -37,6 +37,9 @@ namespace NWSELib
     /// <param name="session"></param>
     /// <returns></returns>
     public delegate double FitnessHandler(Network net, Session session);
+
+    
+
     /// <summary>
     /// 执行任务
     /// </summary>

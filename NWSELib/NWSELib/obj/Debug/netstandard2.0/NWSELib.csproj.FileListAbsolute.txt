@@ -19,7 +19,6 @@ D:\gitlib\NWSE\NWSELib\NWSELib\bin\Debug\netstandard2.0\lib\Microsoft.ML.Probabi
 D:\gitlib\NWSE\NWSELib\NWSELib\bin\Debug\netstandard2.0\lib\Microsoft.ML.Probabilistic.Learners.xml
 D:\gitlib\NWSE\NWSELib\NWSELib\bin\Debug\netstandard2.0\lib\Microsoft.ML.Probabilistic.pdb
 D:\gitlib\NWSE\NWSELib\NWSELib\bin\Debug\netstandard2.0\lib\Microsoft.ML.Probabilistic.xml
-D:\gitlib\NWSE\NWSELib\NWSELib\obj\Debug\netstandard2.0\NWSELib.csprojAssemblyReference.cache
 E:\gitlib\annunakichb\NWSE\NWSELib\NWSELib\bin\Debug\netstandard2.0\lib\Microsoft.ML.Probabilistic.Compiler.dll
 E:\gitlib\annunakichb\NWSE\NWSELib\NWSELib\bin\Debug\netstandard2.0\lib\Microsoft.ML.Probabilistic.Compiler.pdb
 E:\gitlib\annunakichb\NWSE\NWSELib\NWSELib\bin\Debug\netstandard2.0\lib\Microsoft.ML.Probabilistic.Compiler.xml
@@ -42,3 +41,4 @@ E:\gitlib\annunakichb\NWSE\NWSELib\NWSELib\obj\Debug\netstandard2.0\NWSELib.Asse
 E:\gitlib\annunakichb\NWSE\NWSELib\NWSELib\obj\Debug\netstandard2.0\NWSELib.AssemblyInfo.cs
 E:\gitlib\annunakichb\NWSE\NWSELib\NWSELib\obj\Debug\netstandard2.0\NWSELib.dll
 E:\gitlib\annunakichb\NWSE\NWSELib\NWSELib\obj\Debug\netstandard2.0\NWSELib.pdb
+D:\gitlib\NWSE\NWSELib\NWSELib\obj\Debug\netstandard2.0\NWSELib.csprojAssemblyReference.cache

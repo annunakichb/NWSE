@@ -606,7 +606,8 @@ namespace NWSEExperiment.maze
         public override List<double> getObserve()
         {
 
-            double[] obs = new double[this.WallSensors.Count + this.GoalSensors.Count];
+            //double[] obs = new double[this.WallSensors.Count + this.GoalSensors.Count];
+            double[] obs = new double[this.WallSensors.Count + 2];
             // Update wall sensor inputs
             for (int j = 0; j < WallSensors.Count; j++)
             {
@@ -615,11 +616,15 @@ namespace NWSEExperiment.maze
             }
 
             // Update pie slice sensor inputs
-            for (int j = WallSensors.Count; j < WallSensors.Count + GoalSensors.Count; j++)
+            obs[WallSensors.Count] = (float)((Radar)GoalSensors[0]).getActivation();
+            if (obs[WallSensors.Count] > 1.0) obs[WallSensors.Count] = 1.0f;
+            obs[WallSensors.Count + 1] = this.Location.distance(this.maze.goal_point)/this.maze.maxGoalDistance;
+
+            /*for (int j = WallSensors.Count; j < WallSensors.Count + GoalSensors.Count; j++)
             {
                 obs[j] = (float)((Radar)GoalSensors[j - WallSensors.Count]).getActivation();
                 if (obs[j] > 1.0) obs[j] = 1.0f;
-            }
+            }*/
 
             return obs.ToList();
         }
@@ -744,8 +749,8 @@ namespace NWSEExperiment.maze
         Brush eva_brush = new SolidBrush(Color.Black);
         public void drawEvaulation(Graphics g, CoordinateFrame frame)
         {
-            if (this.net.lastActionPlan == null) return;
-            List<(List<double>,double)> records = this.net.lastActionPlan.actionEvaulationRecords;
+            if (this.net.actionPlanChain.Last == null) return;
+            List<(List<double>, double,int)> records = this.net.actionPlanChain.EvaulationRecords;
             if (records == null || records.Count <= 0) return;
             //records = records.FindAll(r => !double.IsNaN(r.Item2));
             //if (records == null || records.Count <= 0) return;
@@ -758,7 +763,7 @@ namespace NWSEExperiment.maze
             
             for(int i=0;i< records.Count;i++)
             {
-                (List<double>, double) r = records[i];
+                (List<double>, double,int) r = records[i];
                 double action = r.Item1[0];
                 double futureHeading  = Heading + (action - 0.5) * Max_Rotate_Action * 2;
                 if (futureHeading < 0) futureHeading += 2 * Math.PI;
@@ -772,7 +777,7 @@ namespace NWSEExperiment.maze
                 Point2D l2 = frame.convertToDisplay(p2);
                 g.DrawLine(dash_pen, (float)l1.X, (float)l1.Y, (float)l2.X, (float)l2.Y);
                 //g.DrawLine(System.Drawing.Pens.Red, (float)l1.X, (float)l1.Y, (float)l2.X, (float)l2.Y);
-                g.DrawString(double.IsNaN(records[i].Item2)?"Nan":records[i].Item2.ToString("F2"), eva_font, eva_brush, (float)l2.X, (float)l2.Y);
+                g.DrawString(double.IsNaN(records[i].Item2)?"Nan":records[i].Item2.ToString("F0")+"("+ records[i].Item3.ToString()+")", eva_font, eva_brush, (float)l2.X, (float)l2.Y);
             }
         }
         #endregion

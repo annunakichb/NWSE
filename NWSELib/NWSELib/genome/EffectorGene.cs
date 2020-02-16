@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace NWSELib.genome
 {
+    /// <summary>
+    /// 效应器基因
+    /// </summary>
     public class EffectorGene : NodeGene
     {
         /// <summary>
@@ -12,10 +15,16 @@ namespace NWSELib.genome
         {
 
         }
-
+        /// <summary>
+        /// 维度
+        /// </summary>
         public override List<int> Dimensions { get => new List<int>();}
 
-
+        /// <summary>
+        /// 克隆
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public override T clone<T>() 
         {
             return new EffectorGene(this.owner).copy<T>(this);
