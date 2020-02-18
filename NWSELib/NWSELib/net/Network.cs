@@ -51,7 +51,12 @@ namespace NWSELib.net
         /// 策略单元
         /// </summary>
         public Policy policy;
-        
+        /// <summary>
+        /// 策略
+        /// </summary>
+        public Imagination imagination;
+
+        public String policyName = "imagination";
 
         public override string ToString()
         {
@@ -188,9 +193,16 @@ namespace NWSELib.net
         /// </summary>
         public void Reset()
         {
-            this.nodes.ForEach(a => a.Reset());           
+            this.nodes.ForEach(a => a.Reset());
+            this.nodes.ForEach(n => n.think_reset());
         }
-        
+
+        public void thinkReset()
+        {
+            this.nodes.ForEach(n => n.think_reset());
+        }
+
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -240,8 +252,11 @@ namespace NWSELib.net
                 }
             }
 
-            actionMemory = new BehaviourMemory(this);
+            actionPlanChain = new ActionPlanChain(this);
+            actionMemory = new ObservationHistory(this);
             policy = new Policy(this);
+            imagination = new Imagination(this);
+
         }
 
 
@@ -254,11 +269,11 @@ namespace NWSELib.net
         /// <summary>
         /// 行动记忆空间
         /// </summary>
-        public BehaviourMemory actionMemory;
+        public ObservationHistory actionMemory;
         /// <summary>
         /// 行动计划链
         /// </summary>
-        public ActionPlanChain actionPlanChain = new ActionPlanChain();
+        public ActionPlanChain actionPlanChain;
         
         #endregion
 
@@ -372,7 +387,11 @@ namespace NWSELib.net
             this.reward = reward;
             if (this.actionPlanChain.Last != null)
                 this.actionPlanChain.Last.reward = reward;
-            policy.doEvaluation(time, session);            
+            if(policyName == "policy")
+                policy.doEvaluation(time, session);
+            else
+                imagination.doImagination(time, session);
+            //        
             setEffectValue(time);
 
             //6.记录行为
@@ -401,8 +420,6 @@ namespace NWSELib.net
             if (obs == null)
                 obs = this.GetReceoptorValues();
 
-            
-
             //准备新的观察数据，初始值都是null
             Vector[] newObs = new Vector[obs.Count];
             //新的观察数据中的动作部分用原观察替换
@@ -421,7 +438,7 @@ namespace NWSELib.net
                                    .ConvertAll(id => (Receptor)this[id])
                                    .ConvertAll(node => receptors.IndexOf(node))
                                    .ToArray();
-                List <Vector> condValues = condIndex.ToList().ConvertAll(index=>newObs[index]);
+                List <Vector> condValues = condIndex.ToList().ConvertAll(index=>obs[index]);
                 List<Vector> varValues = inf.forward_inference(condValues).Item2;
                 for(int i=0;i< varValues.Count;i++)
                 {
@@ -432,6 +449,43 @@ namespace NWSELib.net
 
             return newObs.All(v => v != null) ? newObs.ToList() : null;
 
+        }
+        public List<InferenceRecord> GetMatchInfRecords(List<Vector> envValues,List<double> actions, int time)
+        {
+            return GetMatchInfRecords(this.GetMergeReceptorValues(envValues, actions), time);
+        }
+        public List<InferenceRecord> GetMatchInfRecords(List<Vector> observations,int time)
+        {
+            this.thinkReset();
+            //初始化感知节点
+            List<Receptor> receptors = this.Receptors;
+            for (int i = 0; i < receptors.Count; i++)
+            {
+                receptors[i].think(this, time, observations[i]);
+            }
+
+            //激活处理节点
+            List<Handler> handlers = this.Handlers;
+            while (handlers != null && !handlers.All(n => n.IsThinkCompleted(time)))
+            {
+                handlers.ForEach(n => n.think(this, time, null));
+            }
+
+            
+
+            List<Inference> inferences = this.Inferences;
+            List<InferenceRecord> results = new List<InferenceRecord>();
+            foreach (Inference inte in inferences)
+            {
+                //得到条件值
+                List<Vector> condValues = inte.getGene().getConditionIds().ConvertAll(id => this[id]).ConvertAll(node => node.getThinkValues(time));
+                //条件值不全
+                if (condValues.Exists(v => v == null)) continue;
+                var match = inte.getMatchRecord(this, condValues, time);
+                if (match.Item1 == null) continue;
+                results.Add(match.Item1);
+            }
+            return results;
         }
         #endregion
 
@@ -444,6 +498,12 @@ namespace NWSELib.net
         {
             return this.Receptors.ConvertAll(r => r.Value.clone());
         }
+
+        public List<Vector> GetReceptorSceneValues()
+        {
+            return 
+                this.Receptors.FindAll(r => !r.Gene.IsActionSensor()).ConvertAll(r => r.Value.clone());
+        }
         /// <summary>
         /// 分非动作和动作取得外部观察值
         /// </summary>
@@ -452,8 +512,23 @@ namespace NWSELib.net
         {
             return (
                 this.Receptors.FindAll(r => !r.Gene.IsActionSensor()).ConvertAll(r => r.Value.clone()),
-                this.Receptors.FindAll(r => r.Gene.IsActionSensor()).ConvertAll(r => r.Value[0])
+                this.Receptors.FindAll(r => r.Gene.IsActionSensor()).ConvertAll(r => r.Value==null?double.NaN:r.Value[0])
                 );
+        }
+
+        public List<Vector> GetMergeReceptorValues(List<Vector> envValues,List<double> actions)
+        {
+            int aIndex = 0, eIndex = 0;
+            List<Vector> observations = new List<Vector>();
+            List<Receptor> receptors = this.Receptors;
+            for (int i = 0; i < receptors.Count; i++)
+            {
+                if (receptors[i].Gene.IsActionSensor())
+                    observations.Add(new Vector(actions[aIndex++]));
+                else
+                    observations.Add(envValues[eIndex++]);
+            }
+            return observations;
         }
         /// <summary>
         /// 计算两个外部观察的距离
@@ -505,14 +580,14 @@ namespace NWSELib.net
         /// <param name="curObs"></param>
         /// <param name="plan"></param>
         /// <returns></returns>
-        public List<Vector> ReplaceWithPlanAction(List<Vector> curObs, ActionPlan plan)
+        public List<Vector> ReplaceWithAction(List<Vector> curObs, List<double> actions)
         {
             int index = 0;
             for (int i = 0; i < Receptors.Count; i++)
             {
                 if (Receptors[i].Gene.IsActionSensor())
                 {
-                    curObs[i] = new Vector(plan.actions[index++]);
+                    curObs[i] = new Vector(actions[index++]);
                 }
             }
             return curObs;
@@ -547,7 +622,7 @@ namespace NWSELib.net
 
         #endregion
 
-
+        
         #region 保存和读取
         public void save(String path,int generation)
         {

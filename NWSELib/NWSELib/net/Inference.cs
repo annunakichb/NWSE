@@ -284,7 +284,7 @@ namespace NWSELib.net
             double mindis = double.MaxValue;
             foreach (InferenceRecord r in this.records)
             {
-                double dis = r.distance(values).Average();
+                double dis = r.distanceFromCondition(values).Average();
                 if(dis < mindis)
                 {
                     mindis = dis;
@@ -714,7 +714,7 @@ namespace NWSELib.net
         /// <param name="condvalues">推理条件值</param>
         /// <param name="inferenceMethod">推理方法：samples,record</param>
         /// <returns></returns>
-        public (InferenceRecord, List<Vector>, double distance) forward_inference(List<Vector> condvalues,String inferenceMethod="record")
+        public (InferenceRecord record, List<Vector> postValues, double distance) forward_inference(List<Vector> condvalues,String inferenceMethod="record")
         {
             if (inferenceMethod == "recordsample")
                 return this.forward_inference_ByRecordSample(condvalues);
@@ -726,7 +726,7 @@ namespace NWSELib.net
 
         private (InferenceRecord, List<Vector>, double distance) forward_inference_ByRecord(List<Vector> condvalues)
         {
-            (InferenceRecord record,double distance)= this.getNearestRecord(values);
+            (InferenceRecord record,double distance)= this.getNearestRecord(condvalues);
             if (record == null) return (null, null, 0);
             return (record, record.getMeanValues().varValues, distance);
         }

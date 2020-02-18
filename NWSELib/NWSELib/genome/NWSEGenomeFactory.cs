@@ -103,22 +103,7 @@ namespace NWSELib.genome
             inferenceGene.Id = Session.idGenerator.getGeneId(inferenceGene);
             genome.infrernceGenes.Add(inferenceGene);
 
-            //生成推理节点:2 
-            inferenceGene = new InferenceGene(genome);
-            inferenceGene.Generation = session.Generation;
-            inferenceGene.conditions = new List<(int, int)>();
-            inferenceGene.variables = new List<(int, int)>();
-            inferenceGene.conditions.Add((genome["g1"].Id, 1));
-            inferenceGene.conditions.Add((genome["gd"].Id, 1));
-            inferenceGene.conditions.Add((genome["heading"].Id, 1));
-            inferenceGene.conditions.Add((genome["_a2"].Id, 1));
-            inferenceGene.variables.Add((genome["b"].Id, 0));
-            inferenceGene.sort_dimension();
-            inferenceGene.Id = Session.idGenerator.getGeneId(inferenceGene);
-            genome.infrernceGenes.Add(inferenceGene);
-
             
-
             
 
             //生成推理节点:4

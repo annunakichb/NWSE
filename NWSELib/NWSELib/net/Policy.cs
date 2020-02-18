@@ -42,13 +42,58 @@ namespace NWSELib.net
         /// <returns></returns>
         public ActionPlan doEvaluation(int time, Session session)
         {
-            
-            //处理当前行动计划
-            ActionPlan plan = processCurrentActionPlan(time,session);
-            if (plan != null) return plan;
+            //1.1 第一次规划，随机动作
+            if (net.actionPlanChain.Length <= 0)
+            {
+                return net.actionPlanChain.Reset(ActionPlan.CreateInstinctPlan(net, time, "初始动作"));
+            }
 
-            //制订新的行动计划
-            return makeNewActionPlan(time,session);
+            //1.2 仍在随机动作阶段
+            if (time < 100)
+            {
+                net.actionMemory.Merge(net, net.actionPlanChain.Last);
+                return net.actionPlanChain.Reset(ActionPlan.CreateRandomPlan(net, time, "随机漫游"));
+            }
+
+            //1.3 随机漫游结束
+            if (time == 100)
+            {
+                net.actionMemory.Merge(net, net.actionPlanChain.Last);
+                return net.actionPlanChain.Reset(makeNewActionPlan(time, session));
+            }
+
+            //1.4 规划行动是否完成了(奖励负)
+            if (policyConfig.PlanRewardRange.In(net.reward))
+            {
+                net.actionMemory.Merge(net, net.actionPlanChain);
+                return net.actionPlanChain.Reset(makeNewActionPlan(time, session));
+            }
+            //1.5 规划行动是否完成了(完成计划步长)
+            if (net.actionPlanChain.Length >= net.actionPlanChain.Root.planSteps && net.actionPlanChain.Root.planSteps > 0)
+            {
+                net.actionMemory.Merge(net, net.actionPlanChain.Last);
+                return net.actionPlanChain.Reset(makeNewActionPlan(time, session));
+            }
+
+            //1.6 预测本次规划行动的结果是否会是负值
+            double expect = forcastActionPlan();
+            if (expect < 0)
+            {
+                net.actionMemory.Merge(net, net.actionPlanChain);
+                return net.actionPlanChain.Reset(makeNewActionPlan(time, session));
+            }
+
+            //1.7 继续本次行动计划
+            return net.actionPlanChain.PutNext(ActionPlan.createMaintainPlan(net, time, "", net.actionPlanChain.Last.expect, net.actionPlanChain.Last.planSteps - 1));
+
+        }
+
+        /// <summary>
+        /// 对当前行为进行推理，预测其未来评估
+        /// </summary>
+        /// <returns></returns>
+        private double forcastActionPlan()
+        {
 
         }
         /// <summary>
@@ -62,124 +107,44 @@ namespace NWSELib.net
         private ActionPlan makeNewActionPlan(int time, Session session)
         {
             //取得与当前场景匹配的所有行动计划
-            List<ActionPlan> plans = net.actionMemory.FindMatchActionPlans();
+            List<ObservationHistory.ActionRecord> actionRecords = net.actionMemory.FindMatchActionPlans();
             //如果行动计划不是全部，补齐全部可能的行动计划，且按照与本能行动一致的顺序排序
-            plans = checkActionPlansFull(plans,time);
-            //如果探索优先，选择行动计划中还没有探索过的行动作为新的行动
-            ActionPlan plan = null;
-            if (policyConfig.exploration)
-                plan = selectExplorationActionPlan(plans);
-            if (plan != null) return net.actionPlanChain.Reset(plan);
+            List<ActionPlan> plans = checkActionPlansFull(actionRecords, time);
 
-            //如果本能方向没有探索，仍执行本能探索
-            if (plans[0].evaulation == double.NaN)
-                return net.actionPlanChain.Reset(plans[0]);
+            //找到本能行动计划和维持行动计划
+            List<double> instictAction = Session.instinctActionHandler(net, time);
+            ActionPlan instinctPlan = plans.FirstOrDefault(p => p.actions[0] == instictAction[0]);
+            ActionPlan maintainPlan = plans.FirstOrDefault(p => p.actions[0] == 0.5);
 
-            //对每一个待选择动作进行评估
-            plan = plans[0];
-            double expectEvaulation = 0;
-            List<(List<double>, double, int)> evaulationRecords = plans.ConvertAll(p => (p.actions, double.MinValue, 0));
-
-            for (int i = 0; i < plans.Count; i++)
+            //遍历所有的计划
+            for(int i=0;i<plans.Count;i++)
             {
-                plan = plans[i];
-                //如果是探索优先，且该行动尚未探索过，则执行探索
-                if(policyConfig.exploration && double.IsNaN(plan.evaulation))
+                //上次是负奖励，则维持行动没有必要
+                if (net.reward < 0 && plans[i].IsMaintainAction()) continue;
+                //如果第i个行动确定是正评估，就是它了
+                if (plans[i].evaulation > 0)
                 {
-                    plan.planSteps = policyConfig.init_plan_depth;
-                    return net.actionPlanChain.Reset(plan);
+                    plans[i].reason = "走向正评估";
+                    plans[i].planSteps = (int)plans[i].evaulation + policyConfig.init_plan_depth;
+                    return plans[i];
                 }
-
-                //计算推理数
-                int inferenceCount = policyConfig.init_plan_depth;
-                if (plan.evaulation > 0)
-                    inferenceCount += (int)plan.evaulation;
-                else inferenceCount = (int)(plan.evaulation / 2);
-
-                List<Vector> curObs = net.GetReceoptorValues();
-                curObs = net.ReplaceWithPlanAction(curObs, plan);
-                
-                for(int j=0;j< inferenceCount;j++)
+                //如果第i个行动是未知评估，就是它了
+                if (double.IsNaN(plans[i].evaulation))
                 {
-                    curObs = net.forward_inference(curObs);
-                    if (curObs == null) break;
-                    ActionPlan temp = net.actionMemory.FindOptimaActionPlan(false,net.RemoveActionFromReceptor(curObs));
-                    if(temp == null)
-                    {
-                        curObs = net.ReplaceMaintainAction(curObs);
-                        continue;
-                    }
-                    if(expectEvaulation < temp.evaulation)
-                    {
-                        expectEvaulation = temp.evaulation;
-                        plan = plans[i];
-                        plan.planSteps = j + 1;
-                    }
-                    if(evaulationRecords[i].Item2< temp.evaulation)
-                    {
-                        evaulationRecords[i] = (evaulationRecords[i].Item1, temp.evaulation, j + 1);
-                    
-                    }
+                    plans[i].reason = "探索未知";
+                    plans[i].planSteps = policyConfig.init_plan_depth;
+                    return plans[i];
                 }
-                
             }
-            net.actionPlanChain.EvaulationRecords = evaulationRecords;
-            return net.actionPlanChain.Reset(plan);
-            
+
+            //执行到这里，说明所有的评估都是负评估了,选择最小负数的行动
+            int index = plans.ConvertAll(p => p.evaulation).argmin();
+            plans[index].reason = "选择最小负评估";
+            plans[index].planSteps = -1*(int)plans[index].evaulation / 2;
+            return plans[index];
         }
         
-        /// <summary>
-        /// 选择探索行动计划
-        /// </summary>
-        /// <param name="plans"></param>
-        /// <returns></returns>
-        private ActionPlan selectExplorationActionPlan(List<ActionPlan> plans)
-        {
-            if (plans.Count <= 0) return null;
-            return plans.FirstOrDefault(p => double.IsNaN(p.evaulation));
-        }
-
-        /// <summary>
-        /// 处理当前行动计划
-        /// </summary>
-        /// <param name="time">时间</param>
-        /// <param name="session">会话</param>
-        /// <param name="reward">本次观察得到的奖励</param>
-        /// <param name="policyConfig">配置</param>
-        /// <returns>如果不空，则表示当前行动计划继续</returns>
-        private ActionPlan processCurrentActionPlan(int time, Session session)
-        {
-            ActionPlan plan = null;
-            if (net.actionPlanChain.Length <= 0)
-            {
-                return net.actionPlanChain.Reset(ActionPlan.CreateRandomPlan(net,time));
-            }
-            if(time <= 100)
-            {
-                net.actionMemory.Merge(net, net.actionPlanChain.Last);
-                return net.actionPlanChain.Reset(ActionPlan.CreateRandomPlan(net, time));
-            }
-            
-
-            //1.1 记录奖励
-            net.actionPlanChain.Last.reward = net.reward;
-            //1.2 如果非探索优先，则根据当前环境寻找行动记忆空间中是否有更好行动方案
-            if (!policyConfig.exploration)
-            {
-                plan = net.actionMemory.FindOptimaActionPlan();
-                if (plan != null) return net.actionPlanChain.Reset(plan);
-            }
-            //1.3 本次行动探索是否还没有结束
-            if (net.actionPlanChain.Length < net.actionPlanChain.Last.planSteps &&
-                !policyConfig.PlanRewardRange.In(net.reward))
-            {
-                return net.actionPlanChain.PutNext(ActionPlan.createMaintainPlan(net, time,"", net.actionPlanChain.Last.forcastEvaulation, net.actionPlanChain.Last.planSteps-1));
-            }
-
-            //1.4 将本次探索结果放入行动记忆，本次探索结束
-            net.actionMemory.Merge(net, net.actionPlanChain);
-            return null;
-        }
+        
 
         /// <summary>
         /// 生成可以测试的动作计划集：从动作记忆中找到的行动计划，加上新补充的一些
@@ -187,31 +152,33 @@ namespace NWSELib.net
         /// <param name="plans">从动作记忆中找到的行动计划</param>
         /// <param name="time"></param>
         /// <returns></returns>
-        private List<ActionPlan> checkActionPlansFull(List<ActionPlan> plans,int time)
+        private List<ActionPlan> checkActionPlansFull(List<ObservationHistory.ActionRecord> actionRecords,int time)
         {
-            if (plans == null) plans = new List<ActionPlan>();
             List<List<double>> actionSets = CreateTestActionSet(Session.instinctActionHandler(net,time));
 
-            for(int i=0;i<actionSets.Count;i++)
+            ActionPlan[] r = new ActionPlan[actionSets.Count];
+            for (int i=0;i<actionSets.Count;i++)
             {
-                ActionPlan plan = plans.FirstOrDefault(p => p.Equals(actionSets[i]));
-                if(plan != null)
+                ActionPlan plan = null;
+                String judgeType = ActionPlan.JUDGE_INFERENCE;
+                if (i == 0) judgeType = ActionPlan.JUDGE_INSTINCT;
+                else if (actionSets[i][0] == 0.5) judgeType = ActionPlan.JUDGE_MAINTAIN;
+
+                ObservationHistory.ActionRecord record = actionRecords.FirstOrDefault(p => p.Equals(actionSets[i]));
+                if(record == null)
                 {
-                    plans.Remove(plan);
-                    plans.Insert(i, plan);
-                }
-                else
+                    plan = ActionPlan.CreateActionPlan(net, actionSets[i], time, judgeType, "");
+                }else
                 {
-                    String judgeType = ActionPlan.JUDGE_INFERENCE;
-                    if (i == 0) judgeType = ActionPlan.JUDGE_INSTINCT;
-                    else if (actionSets[i][0] == 0.5) judgeType = ActionPlan.JUDGE_MAINTAIN;
-                    plan = ActionPlan.CreateActionPlan(net,actionSets[i], time,judgeType, "",policyConfig.init_plan_depth);
-                    plans.Insert(i, plan);
+                    plan = ActionPlan.CreateActionPlan(net, record.actions, time, judgeType, "");
                 }
+                r[i] = plan;
             }
-            return plans;
+            return r.ToList();
 
         }
+
+        private Dictionary<double, List<List<double>>> _cached_ActionSet = new Dictionary<double, List<List<double>>>();
 
         /// <summary>
         /// 生成的测试集第一个是本能动作，第二个是方向不变动作，然后逐渐向两边增大
@@ -222,16 +189,39 @@ namespace NWSELib.net
         {
             List<List<double>> r = new List<List<double>>();
             Receptor receptor = (Receptor)this.net["_a2"];
+            int count = receptor.getGene().SampleCount;
+            double unit = receptor.getGene().LevelUnitDistance;
+
             double[] values = receptor.GetSampleValues();
             if (values != null)
             {
                 int minIndex = values.ToList().ConvertAll(v => Math.Abs(v - instinctActions[0])).argmin();
                 instinctActions[0] = values[minIndex];
-            }
-            r.Add(instinctActions);
 
-            int count = receptor.getGene().SampleCount;
-            double unit = receptor.getGene().LevelUnitDistance;
+                if (_cached_ActionSet.ContainsKey(instinctActions[0]))
+                    return _cached_ActionSet[instinctActions[0]];
+
+                r.Add(instinctActions);
+                int index = 1;
+                while(r.Count<count)
+                {
+                    int t = (minIndex + index) % (values.Length);
+                    r.Add(new double[] {values[t]}.ToList());
+                    if (r.Count >= count) break;
+
+                    t = minIndex - index;
+                    if (t < 0) t = values.Length - 1;
+                    r.Add(new double[] { values[t] }.ToList());
+
+                    index += 1;
+                }
+
+                _cached_ActionSet.Add(instinctActions[0],r);
+                return r;
+            }
+
+            r.Add(instinctActions);
+            
 
             int i = 1;
             while(r.Count < count)

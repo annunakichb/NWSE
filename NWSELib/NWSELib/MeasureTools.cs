@@ -5,6 +5,8 @@ using System.Text;
 using System.Reflection;
 using System.Linq;
 
+using NWSELib.common;
+
 namespace NWSELib
 {
     /// <summary>
@@ -33,6 +35,27 @@ namespace NWSELib
         #endregion
 
         #region 分级处理
+        protected Dictionary<int, double[]> _cached_sample_values = new Dictionary<int, double[]>();
+        /// <summary>
+        /// 取得被分级的采样
+        /// </summary>
+        /// <param name="sectionCount"></param>
+        /// <returns></returns>
+        public virtual double[] getRankedSamples(int count, double unit=-1)
+        {
+            if (_cached_sample_values.ContainsKey(count))
+                return _cached_sample_values[count];
+            if (unit <= 0) unit = 1.0 / (count-1);
+            double[] values = new double[count];
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] = i * unit;
+                if (i == values.Length - 1) values[i] = 1.0;
+
+            }
+            _cached_sample_values.Add(count,values);
+            return values;
+        }
         /// <summary>
         /// 根据分级层次，分段数计算分级后的值
         /// </summary>
@@ -40,18 +63,14 @@ namespace NWSELib
         /// <param name="abstractLevel"></param>
         /// <param name="sectionCount"></param>
         /// <returns></returns>
-        public virtual double getRankedValue(double originValue, int abstractLevel,int sectionCount)
+        public virtual double getRankedValue(double originValue, int abstractLevel,int sampleCount=-1)
         {
             if (abstractLevel == 0) return originValue;
+
+            if (sampleCount == -1) sampleCount = this.Levels[abstractLevel - 1];
+            double[] values = this.getRankedSamples(sampleCount);
+            return values[values.ToList().ConvertAll(v=>Math.Abs(v-originValue)).argmin()];
             
-            double unit = this.Range.Distance / (sectionCount-1);
-            double t = originValue / unit;
-            int index = (int)t;
-            double newValue = Range.Min + index * unit;
-            if(t - index >= 0.5)
-                newValue = Range.Min + (index+1) * unit;
-            
-            return newValue;
         }
         /// <summary>
         /// 根据分级层次，分段数计算分级后的索引
@@ -210,6 +229,28 @@ namespace NWSELib
         {
             return (rotate - 0.5) * 2 * Math.PI * MeasureTools.DRScale;
         }
+
+        /// <summary>
+        /// 取得被分级的采样
+        /// </summary>
+        /// <param name="sectionCount"></param>
+        /// <returns></returns>
+        public override double[] getRankedSamples(int count, double unit = -1)
+        {
+            if (_cached_sample_values.ContainsKey(count))
+                return _cached_sample_values[count];
+            
+            
+            double[] values = new double[count];
+            if (count == 4) values = new double[] { 0, 0.25, 0.5, 0.75 };
+            else if (count == 8) values = new double[] { 0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875 };
+            else if (count == 12) values = new double[] { 0, 0.083, 0.0167, 0.25, 0.3333, 0.4167, 0.5, 0.5833, 0.6667, 0.75, 0.8333, 0.9167 };
+            else if (count == 16) values = new double[] { 0, 0.0625, 0.125, 0.1875, 0.25, 0.3125, 0.375, 0.4375, 0.5, 0.5625, 0.625, 0.6875, 0.75, 0.8125, 0.875, 0.9375 };
+            
+            _cached_sample_values.Add(count, values);
+            return values;
+        }
+
         /// <summary>
         /// 两个角度的夹角计算，两个角度都是0-2*pi之间的值
         /// </summary>
@@ -218,10 +259,10 @@ namespace NWSELib
         /// <returns></returns>
         public override double distance(double h1, double h2)
         {
-            double x1 = Math.Cos(h1);
-            double y1 = Math.Sin(h1);
-            double x2 = Math.Cos(h2);
-            double y2 = Math.Sin(h2);
+            double x1 = Math.Cos(h1*2*Math.PI);
+            double y1 = Math.Sin(h1 * 2 * Math.PI);
+            double x2 = Math.Cos(h2 * 2 * Math.PI);
+            double y2 = Math.Sin(h2 * 2 * Math.PI);
 
             double l1 = Math.Sqrt((x1 * x1 + y1 * y1));
             double l2 = Math.Sqrt((x2 * x2 + y2 * y2));
@@ -230,7 +271,7 @@ namespace NWSELib
             double angle = Math.Acos(cos);
             if (double.IsNaN(angle)) return 0;
             if (angle < 0) angle += Math.PI * 2;
-            return angle / tolerate;
+            return angle / (2*Math.PI);
         }
 
         

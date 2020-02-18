@@ -44,10 +44,10 @@ namespace NWSELib.net
                 return originValue;
 
 
-            int sectionCount = getGene().SampleCount;
-            if (sectionCount <= 0) return originValue;
+            int sampleCount = getGene().SampleCount;
+            if (sampleCount <= 0) return originValue;
 
-            return MeasureTools.GetMeasure(this.Cataory).getRankedValue(originValue, this.getGene().AbstractLevel, sectionCount);
+            return MeasureTools.GetMeasure(this.Cataory).getRankedValue(originValue, this.getGene().AbstractLevel, sampleCount);
 
 
         }
@@ -134,21 +134,15 @@ namespace NWSELib.net
            return MeasureTools.GetMeasure(Gene.Cataory).tolerate >= distance;
         }
 
-        private double[] _cached_sample_values = null;
+        
         public double[] GetSampleValues()
         {
             if (getGene().AbstractLevel <= 0) return null;
-            if (_cached_sample_values != null) return _cached_sample_values;
+            
             int count = getGene().SampleCount;
             double unit = getGene().LevelUnitDistance;
-            double[] values = new double[count];
-            for (int i = 0; i < values.Length; i++)
-            {
-                values[i] = i * unit;
-                if (i == values.Length - 1) values[i] = 1.0;
-
-            }
-            return _cached_sample_values = values;
+            return MeasureTools.GetMeasure(this.gene.Cataory).getRankedSamples(count, unit);
+            
         }
         /// <summary>
         /// 
@@ -169,10 +163,6 @@ namespace NWSELib.net
             }
 
             return Network.rng.NextDouble();
-
-
-
-            
         }
         #endregion
     }

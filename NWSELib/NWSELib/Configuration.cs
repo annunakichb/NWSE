@@ -259,6 +259,13 @@ namespace NWSELib
                 }
             }
             #endregion
+        
+            public bool IsActionSensor()
+            {
+                return this.group.StartsWith("action");
+            }
+
+            
         }
 
         public class SensorProperty

@@ -441,7 +441,7 @@ namespace NWSEExperiment.maze
             //temp.Y -= (float)AreaOfImpact.Position.Y;
 
             angle = (float)temp.angle();
-            angle -= Heading;
+            //angle -= Heading;
             angle *= 57.297f; // convert radians to degrees
 
             while (angle > 360)
@@ -449,7 +449,9 @@ namespace NWSEExperiment.maze
             while (angle < 0)
                 angle += 360;
 
-            foreach (Radar r in GoalSensors)
+            Radar r0 = (Radar)GoalSensors[0];
+            r0.Activation = angle / 360;
+            /*foreach (Radar r in GoalSensors)
             {
                 if ((angle < 45 || angle >= 315) && r.StartAngle == 315)
                 {
@@ -461,9 +463,9 @@ namespace NWSEExperiment.maze
                     r.Activation = angle / 360;
                     break;
                 }
-            }
+            }*/
 
-            
+
 
             // Update the compass/northstar GoalSensors
             // Note: This is trivial compared to rangefinder updates, which check against all walls for collision. No need to gate it to save CPU.
@@ -749,8 +751,23 @@ namespace NWSEExperiment.maze
         Brush eva_brush = new SolidBrush(Color.Black);
         public void drawEvaulation(Graphics g, CoordinateFrame frame)
         {
-            if (this.net.actionPlanChain.Last == null) return;
-            List<(List<double>, double,int)> records = this.net.actionPlanChain.EvaulationRecords;
+            if (this.net.actionPlanChain.Length == 0) return;
+            if (this.net.policyName == "policy" && this.net.actionPlanChain.Length > 1) return;
+
+            List<(List<double>, double)> records = null;
+            String fmt = "";
+            if (this.net.policyName == "policy")
+            {
+                records = this.net.actionPlanChain.Root.actionEvaulationRecords;
+                fmt = "F0";
+            } 
+            else
+            {
+                records = this.net.actionPlanChain.Last.actionEvaulationRecords;
+                fmt = "F3";
+            }
+             
+
             if (records == null || records.Count <= 0) return;
             //records = records.FindAll(r => !double.IsNaN(r.Item2));
             //if (records == null || records.Count <= 0) return;
@@ -763,7 +780,7 @@ namespace NWSEExperiment.maze
             
             for(int i=0;i< records.Count;i++)
             {
-                (List<double>, double,int) r = records[i];
+                (List<double>, double) r = records[i];
                 double action = r.Item1[0];
                 double futureHeading  = Heading + (action - 0.5) * Max_Rotate_Action * 2;
                 if (futureHeading < 0) futureHeading += 2 * Math.PI;
@@ -777,7 +794,7 @@ namespace NWSEExperiment.maze
                 Point2D l2 = frame.convertToDisplay(p2);
                 g.DrawLine(dash_pen, (float)l1.X, (float)l1.Y, (float)l2.X, (float)l2.Y);
                 //g.DrawLine(System.Drawing.Pens.Red, (float)l1.X, (float)l1.Y, (float)l2.X, (float)l2.Y);
-                g.DrawString(double.IsNaN(records[i].Item2)?"Nan":records[i].Item2.ToString("F0")+"("+ records[i].Item3.ToString()+")", eva_font, eva_brush, (float)l2.X, (float)l2.Y);
+                g.DrawString(double.IsNaN(records[i].Item2)?"Nan":records[i].Item2.ToString(fmt), eva_font, eva_brush, (float)l2.X, (float)l2.Y);
             }
         }
         #endregion

@@ -395,8 +395,10 @@ namespace NWSEExperiment
             demoAgent = evolutionMaze.Agents[0];
             demoAgent.Visible = true;
 
-            this.txtMsg.Text = "第" + interactive_time.ToString() + "次交互" + System.Environment.NewLine;
-            this.txtMsg.Text += observationToString(obs, gesture,0,false);
+            this.txtObservation.Text = "第" + interactive_time.ToString() + "次交互" + System.Environment.NewLine;
+            this.txtObservation.Text += observationToString(obs, gesture,0,false);
+
+            prevObservationText = this.txtObservation.Text;
             inferencing = false;
             this.Refresh();
             
@@ -406,8 +408,8 @@ namespace NWSEExperiment
         {
             return "位置=" + "(" + demoAgent.Location.X.ToString("F0") + "," + demoAgent.Location.Y.ToString("F0") + ")" + System.Environment.NewLine +
             "障碍=" + Utility.toString(obs.GetRange(0, 6)) + System.Environment.NewLine + 
-            "目标朝向=" + obs[6].ToString() + System.Environment.NewLine +
-            "目标距离=" + obs[7].ToString() + System.Environment.NewLine +
+            "目标朝向=" + obs[6].ToString("F2") + System.Environment.NewLine +
+            "目标距离=" + obs[7].ToString("F4") + System.Environment.NewLine +
             "朝向=" + MeasureTools.Direction.headingToDegree(gesture[0]).ToString("F2") + "(" + gesture[0].ToString("F2") + ")" + System.Environment.NewLine +
             "奖励=" + reward.ToString("F4") + System.Environment.NewLine +
             "到达=" + end.ToString() + System.Environment.NewLine;
@@ -424,18 +426,22 @@ namespace NWSEExperiment
             inputs.AddRange(gesture);
             actions = this.demoNet.activate(inputs, interactive_time,evolutionSession,reward);
             //显示推理链
-            this.txtPolicy.Text = this.demoNet.actionPlanChain.ToString();
+            if(this.demoNet.policyName == "policy")
+                this.txtPolicy.Text = this.demoNet.actionPlanChain.ToString();
+            else
+                this.txtPolicy.Text = this.demoNet.actionPlanChain.Last.ToString();
 
             interactive_time += 1;
             inferencing = true;
 
-            refreshNetwork(demoNet, treeViewOpenedNetwork);
+            //refreshNetwork(demoNet, treeViewOpenedNetwork);
 
             this.Refresh();
 
 
         }
-        
+
+        private String prevObservationText;
         /// <summary>
         /// 显示行动效果
         /// </summary>
@@ -445,14 +451,24 @@ namespace NWSEExperiment
         {
             (obs,gesture,actions,reward,end) = ((IEnv)this.evolutionMaze).action(this.demoNet,
                 this.demoNet.Effectors.ConvertAll(x => x.Value[0]));
-            
-            this.txtMsg.Text += "第" + interactive_time.ToString() + "次交互" + System.Environment.NewLine;
-            this.txtMsg.Text += observationToString(obs, gesture, reward, end);
 
+            this.txtObservation.Text = prevObservationText;
+
+            prevObservationText = "第" + interactive_time.ToString() + "次交互" + System.Environment.NewLine;
+            prevObservationText += observationToString(obs, gesture, reward, end);
+
+            this.txtObservation.Text += System.Environment.NewLine;
+            this.txtObservation.Text += prevObservationText;
             //this.optima_net.setReward(reward, interactive_time);
             inferencing = false;
             this.Refresh();
            
+        }
+
+        private void treeViewOpenedNetwork_DoubleClick(object sender, EventArgs e)
+        {
+            if (demoNet != null)
+                refreshNetwork(demoNet, treeViewOpenedNetwork);
         }
 
         private void btnOpenDemoAgent_Click(object sender, EventArgs e)
@@ -622,6 +638,7 @@ namespace NWSEExperiment
             this.Refresh();
 
         }
+
 
 
 

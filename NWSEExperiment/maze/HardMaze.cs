@@ -229,9 +229,9 @@ namespace NWSEExperiment.maze
 
             agent.reset(this.start_point);
             List<double> obs =agent.getObserve();
-            obs.Add(0); //没有发生碰撞冲突
-            var poscode = MeasureTools.Position.poscodeCompute(this.AOIRectangle, agent.Location.X, agent.Location.Y);
-            obs.Add(poscode.Item1);
+            //obs.Add(0); //没有发生碰撞冲突
+            //var poscode = MeasureTools.Position.poscodeCompute(this.AOIRectangle, agent.Location.X, agent.Location.Y);
+            //obs.Add(poscode.Item1);
 
             
             List<double> gesture = new List<double>();
@@ -248,10 +248,10 @@ namespace NWSEExperiment.maze
             bool noncollision = agent.doAction(actions.ToArray());
 
             List<double> obs = agent.getObserve();
-            obs.Add(agent.HasCollided?1:0);
+            //obs.Add(agent.HasCollided?1:0);
 
-            var poscode = MeasureTools.Position.poscodeCompute(this.AOIRectangle,agent.Location.X,agent.Location.Y);
-            obs.Add(poscode.Item1);
+            //var poscode = MeasureTools.Position.poscodeCompute(this.AOIRectangle,agent.Location.X,agent.Location.Y);
+            //obs.Add(poscode.Item1);
 
             List<double> gesture = new List<double>();
             gesture.Add(agent.Heading/(2*Math.PI));
@@ -265,13 +265,13 @@ namespace NWSEExperiment.maze
 
         public static List<double> createInstinctAction(Network net, int time)
         {
-            double v = net.getNode("g1").GetValue(time)[0];
-            double angle = v;
-            if (v < 0.5) angle += 0.5;
-            else if (v > 0.5) angle -= 0.5;
-            else angle = 1.0;
-
-            return new double[] { angle }.ToList();
+            double v1 = net.getNode("g1").GetValue(time)[0];
+            double v2 = net.getNode("heading").GetValue(time)[0];
+            double v = v1 - v2;
+            if(v < -0.5) v = 1.0 + v;
+            else if (v > 0.5) v = 1.0 - v;
+            
+            return new double[] { v + 0.5 }.ToList();
 
             
             /*
